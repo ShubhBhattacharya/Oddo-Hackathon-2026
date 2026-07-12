@@ -1,18 +1,44 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { PlusIcon, SearchIcon, EditIcon, TrashIcon } from 'lucide-react'
-
-const mockTrips = [
-  { id: '1', source: 'New York', destination: 'Los Angeles', vehicle: 'TRK-001', driver: 'John Doe', cargoWeight: 4500, plannedDistance: 2800, revenue: 5000, status: 'Dispatched' },
-  { id: '2', source: 'Chicago', destination: 'Houston', vehicle: 'TRK-002', driver: 'Jane Smith', cargoWeight: 5500, plannedDistance: 1100, revenue: 2500, status: 'Completed' },
-  { id: '3', source: 'Miami', destination: 'Atlanta', vehicle: 'TRK-003', driver: 'Bob Johnson', cargoWeight: 4000, plannedDistance: 600, revenue: 1500, status: 'Draft' },
-]
+import { PlusIcon, SearchIcon, EditIcon, TrashIcon, Loader2Icon } from 'lucide-react'
+import { db } from '@/lib/firebase'
+import { collection, onSnapshot } from 'firebase/firestore'
+import type { Trip } from '@/types'
 
 export default function Trips() {
+  const [trips, setTrips] = useState<Trip[]>([])
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'trips'), (snapshot) => {
+      const data = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Trip[]
+      setTrips(data)
+      setLoading(false)
+    })
+    return unsubscribe
+  }, [])
+
+  const filteredTrips = trips.filter(trip => 
+    trip.source.toLowerCase().includes(search.toLowerCase()) ||
+    trip.destination.toLowerCase().includes(search.toLowerCase())
+  )
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <Loader2Icon className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -30,7 +56,12 @@ export default function Trips() {
           <div className="flex items-center gap-4">
             <div className="relative flex-1 max-w-sm">
               <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Search trips..." className="pl-10" />
+              <Input 
+                placeholder="Search trips..." 
+                className="pl-10" 
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
             </div>
           </div>
         </CardHeader>
@@ -42,17 +73,23 @@ export default function Trips() {
                 <TableHead>Destination</TableHead>
                 <TableHead>Vehicle</TableHead>
                 <TableHead>Driver</TableHead>
+                <TableHead>Cargo (kg)</TableHead>
+                <TableHead>Distance (km)</TableHead>
+                <TableHead>Revenue</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockTrips.map((trip) => (
+              {filteredTrips.map((trip) => (
                 <TableRow key={trip.id}>
                   <TableCell className="font-medium">{trip.source}</TableCell>
                   <TableCell>{trip.destination}</TableCell>
-                  <TableCell>{trip.vehicle}</TableCell>
-                  <TableCell>{trip.driver}</TableCell>
+                  <TableCell>{trip.vehicleId}</TableCell>
+                  <TableCell>{trip.driverId}</TableCell>
+                  <TableCell>{trip.cargoWeight}</TableCell>
+                  <TableCell>{trip.plannedDistance}</TableCell>
+                  <TableCell>₹{trip.revenue}</TableCell>
                   <TableCell>
                     <Badge variant={trip.status === 'Completed' ? 'default' : trip.status === 'Dispatched' ? 'secondary' : 'outline'}>
                       {trip.status}

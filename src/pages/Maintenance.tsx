@@ -1,17 +1,44 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { PlusIcon, SearchIcon, EditIcon, TrashIcon } from 'lucide-react'
-
-const mockMaintenance = [
-  { id: '1', vehicle: 'TRK-003', type: 'Oil Change', description: 'Regular oil change', cost: 150, date: '2026-07-10', status: 'Open' },
-  { id: '2', vehicle: 'TRK-001', type: 'Tire Rotation', description: 'Rotate all tires', cost: 80, date: '2026-07-05', status: 'Closed' },
-]
+import { PlusIcon, SearchIcon, EditIcon, TrashIcon, Loader2Icon } from 'lucide-react'
+import { db } from '@/lib/firebase'
+import { collection, onSnapshot } from 'firebase/firestore'
+import type { Maintenance } from '@/types'
 
 export default function Maintenance() {
+  const [maintenance, setMaintenance] = useState<Maintenance[]>([])
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'maintenance'), (snapshot) => {
+      const data = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Maintenance[]
+      setMaintenance(data)
+      setLoading(false)
+    })
+    return unsubscribe
+  }, [])
+
+  const filteredMaintenance = maintenance.filter(item => 
+    item.type.toLowerCase().includes(search.toLowerCase()) ||
+    item.description.toLowerCase().includes(search.toLowerCase())
+  )
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <Loader2Icon className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -29,7 +56,12 @@ export default function Maintenance() {
           <div className="flex items-center gap-4">
             <div className="relative flex-1 max-w-sm">
               <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Search maintenance..." className="pl-10" />
+              <Input 
+                placeholder="Search maintenance..." 
+                className="pl-10" 
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
             </div>
           </div>
         </CardHeader>
@@ -39,17 +71,21 @@ export default function Maintenance() {
               <TableRow>
                 <TableHead>Vehicle</TableHead>
                 <TableHead>Type</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Cost</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockMaintenance.map((item) => (
+              {filteredMaintenance.map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell className="font-medium">{item.vehicle}</TableCell>
+                  <TableCell className="font-medium">{item.vehicleId}</TableCell>
                   <TableCell>{item.type}</TableCell>
-                  <TableCell>{item.date}</TableCell>
+                  <TableCell>{item.description}</TableCell>
+                  <TableCell>₹{item.cost}</TableCell>
+                  <TableCell>{new Date(item.date).toLocaleDateString()}</TableCell>
                   <TableCell>
                     <Badge variant={item.status === 'Closed' ? 'default' : 'destructive'}>
                       {item.status}

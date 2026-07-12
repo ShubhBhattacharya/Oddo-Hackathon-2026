@@ -1,18 +1,45 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { PlusIcon, SearchIcon, EditIcon, TrashIcon } from 'lucide-react'
-
-const mockVehicles = [
-  { id: '1', registrationNumber: 'TRK-001', name: 'Truck 1', model: 'Ford F-150', type: 'Truck', maxLoadCapacity: 5000, odometerReading: 120000, acquisitionCost: 45000, status: 'Available' },
-  { id: '2', registrationNumber: 'TRK-002', name: 'Truck 2', model: 'Chevrolet Silverado', type: 'Truck', maxLoadCapacity: 6000, odometerReading: 85000, acquisitionCost: 52000, status: 'On Trip' },
-  { id: '3', registrationNumber: 'TRK-003', name: 'Truck 3', model: 'Ram 1500', type: 'Truck', maxLoadCapacity: 5500, odometerReading: 150000, acquisitionCost: 48000, status: 'In Shop' },
-]
+import { PlusIcon, SearchIcon, EditIcon, TrashIcon, Loader2Icon } from 'lucide-react'
+import { db } from '@/lib/firebase'
+import { collection, onSnapshot } from 'firebase/firestore'
+import type { Vehicle } from '@/types'
 
 export default function Vehicles() {
+  const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'vehicles'), (snapshot) => {
+      const data = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Vehicle[]
+      setVehicles(data)
+      setLoading(false)
+    })
+    return unsubscribe
+  }, [])
+
+  const filteredVehicles = vehicles.filter(vehicle => 
+    vehicle.registrationNumber.toLowerCase().includes(search.toLowerCase()) ||
+    vehicle.name.toLowerCase().includes(search.toLowerCase()) ||
+    vehicle.model.toLowerCase().includes(search.toLowerCase())
+  )
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <Loader2Icon className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -30,7 +57,12 @@ export default function Vehicles() {
           <div className="flex items-center gap-4">
             <div className="relative flex-1 max-w-sm">
               <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Search vehicles..." className="pl-10" />
+              <Input 
+                placeholder="Search vehicles..." 
+                className="pl-10" 
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
             </div>
           </div>
         </CardHeader>
@@ -47,7 +79,7 @@ export default function Vehicles() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockVehicles.map((vehicle) => (
+              {filteredVehicles.map((vehicle) => (
                 <TableRow key={vehicle.id}>
                   <TableCell className="font-medium">{vehicle.registrationNumber}</TableCell>
                   <TableCell>{vehicle.name}</TableCell>
