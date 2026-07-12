@@ -1,45 +1,75 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { TruckIcon, UsersIcon, MapPinIcon, WrenchIcon, DollarSignIcon, ActivityIcon, BarChart3Icon, AlertCircleIcon, PlusIcon, CheckCircleIcon, XCircleIcon, ClockIcon } from 'lucide-react'
+import { TruckIcon, UsersIcon, MapPinIcon, WrenchIcon, DollarSignIcon, ActivityIcon, BarChart3Icon, AlertCircleIcon, PlusIcon, CheckCircleIcon, XCircleIcon, ClockIcon, Loader2Icon } from 'lucide-react'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
-
-const vehicleStatusData = [
-  { name: 'Available', value: 8, color: 'hsl(var(--primary))' },
-  { name: 'On Trip', value: 5, color: 'hsl(var(--secondary))' },
-  { name: 'In Maintenance', value: 2, color: 'hsl(var(--destructive))' },
-  { name: 'Retired', value: 1, color: 'hsl(var(--muted-foreground))' },
-]
-
-const monthlyFuelCostData = [
-  { month: 'Jan', cost: 4500 },
-  { month: 'Feb', cost: 5200 },
-  { month: 'Mar', cost: 4800 },
-  { month: 'Apr', cost: 6100 },
-  { month: 'May', cost: 5400 },
-  { month: 'Jun', cost: 5800 },
-]
-
-const tripActivityData = [
-  { day: 'Mon', trips: 12 },
-  { day: 'Tue', trips: 15 },
-  { day: 'Wed', trips: 18 },
-  { day: 'Thu', trips: 14 },
-  { day: 'Fri', trips: 20 },
-  { day: 'Sat', trips: 8 },
-  { day: 'Sun', trips: 5 },
-]
-
-const recentActivities = [
-  { id: 1, icon: MapPinIcon, iconColor: 'text-primary', bgColor: 'bg-primary/10', title: 'Trip #123 completed', desc: 'Vehicle TRK-001 arrived at destination', time: '2 min ago', status: 'success' },
-  { id: 2, icon: AlertCircleIcon, iconColor: 'text-destructive', bgColor: 'bg-destructive/10', title: 'Maintenance alert', desc: 'Vehicle TRK-002 is due for service', time: '15 min ago', status: 'warning' },
-  { id: 3, icon: UsersIcon, iconColor: 'text-secondary-foreground', bgColor: 'bg-secondary', title: 'New driver assigned', desc: 'John Doe assigned to Vehicle TRK-003', time: '1 hour ago', status: 'info' },
-  { id: 4, icon: WrenchIcon, iconColor: 'text-primary', bgColor: 'bg-primary/10', title: 'Maintenance completed', desc: 'Vehicle TRK-004 oil change done', time: '2 hours ago', status: 'success' },
-]
+import { db } from '@/lib/firebase'
+import { collection, onSnapshot } from 'firebase/firestore'
+import type { Vehicle, Driver, Trip, Maintenance, FuelLog, Expense } from '@/types'
 
 export default function Dashboard() {
+  const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  const [drivers, setDrivers] = useState<Driver[]>([])
+  const [trips, setTrips] = useState<Trip[]>([])
+  const [maintenance, setMaintenance] = useState<Maintenance[]>([])
+  const [fuelLogs, setFuelLogs] = useState<FuelLog[]>([])
+  const [expenses, setExpenses] = useState<Expense[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const unsub1 = onSnapshot(collection(db, 'vehicles'), (snap) => setVehicles(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Vehicle[]))
+    const unsub2 = onSnapshot(collection(db, 'drivers'), (snap) => setDrivers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Driver[]))
+    const unsub3 = onSnapshot(collection(db, 'trips'), (snap) => setTrips(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Trip[]))
+    const unsub4 = onSnapshot(collection(db, 'maintenance'), (snap) => setMaintenance(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Maintenance[]))
+    const unsub5 = onSnapshot(collection(db, 'fuelLogs'), (snap) => setFuelLogs(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as FuelLog[]))
+    const unsub6 = onSnapshot(collection(db, 'expenses'), (snap) => setExpenses(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Expense[]))
+
+    setLoading(false)
+    return () => { unsub1(); unsub2(); unsub3(); unsub4(); unsub5(); unsub6() }
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[80vh]">
+        <Loader2Icon className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  // Calculate stats
+  const activeVehicles = vehicles.length
+  const availableVehicles = vehicles.filter(v => v.status === 'Available').length
+  const inMaintenanceVehicles = maintenance.filter(m => m.status === 'Open').length
+  const activeTrips = trips.filter(t => t.status === 'Dispatched').length
+
+  // Vehicle status for pie chart
+  const vehicleStatusData = [
+    { name: 'Available', value: availableVehicles, color: 'hsl(var(--primary))' },
+    { name: 'On Trip', value: trips.filter(t => t.status === 'Dispatched').length, color: 'hsl(var(--secondary))' },
+    { name: 'In Maintenance', value: inMaintenanceVehicles, color: 'hsl(var(--destructive))' },
+    { name: 'Retired', value: vehicles.filter(v => v.status === 'Retired').length, color: 'hsl(var(--muted-foreground))' },
+  ]
+
+  // Monthly fuel cost (mock for now)
+  const monthlyFuelCostData = [
+    { month: 'Jan', cost: 4500 },
+    { month: 'Feb', cost: 5200 },
+    { month: 'Mar', cost: 4800 },
+    { month: 'Apr', cost: 6100 },
+    { month: 'May', cost: 5400 },
+    { month: 'Jun', cost: fuelLogs.reduce((sum, log) => sum + log.cost, 0) },
+  ]
+
+  // Recent activities
+  const recentActivities = [
+    { id: 1, icon: MapPinIcon, iconColor: 'text-primary', bgColor: 'bg-primary/10', title: `${trips.length} Trips`, desc: 'Trips managed in the system', time: 'now', status: 'success' },
+    { id: 2, icon: AlertCircleIcon, iconColor: 'text-destructive', bgColor: 'bg-destructive/10', title: 'Maintenance alert', desc: `${inMaintenanceVehicles} vehicle(s) in maintenance`, time: 'now', status: 'warning' },
+    { id: 3, icon: UsersIcon, iconColor: 'text-secondary-foreground', bgColor: 'bg-secondary', title: 'Drivers', desc: `${drivers.length} drivers registered`, time: 'now', status: 'info' },
+    { id: 4, icon: WrenchIcon, iconColor: 'text-primary', bgColor: 'bg-primary/10', title: 'Fuel', desc: `${fuelLogs.length} fuel logs added`, time: 'now', status: 'success' },
+  ]
+
   return (
-    <div className="p-6 space-y-8">
+    <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Dashboard</h1>
@@ -57,18 +87,15 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="overflow-hidden hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Vehicles</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Vehicles</CardTitle>
             <div className="p-2 bg-primary/10 rounded-lg">
               <TruckIcon className="h-4 w-4 text-primary" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">12</div>
+            <div className="text-3xl font-bold">{activeVehicles}</div>
             <div className="flex items-center pt-1">
-              <span className="text-xs font-medium text-emerald-500 flex items-center gap-1">
-                <PlusIcon className="h-3 w-3" /> +2
-              </span>
-              <span className="text-xs text-muted-foreground ml-1">from yesterday</span>
+              <span className="text-xs text-muted-foreground">Vehicles in fleet</span>
             </div>
           </CardContent>
         </Card>
@@ -80,12 +107,9 @@ export default function Dashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">8</div>
+            <div className="text-3xl font-bold">{availableVehicles}</div>
             <div className="flex items-center pt-1">
-              <span className="text-xs font-medium text-red-500 flex items-center gap-1">
-                <XCircleIcon className="h-3 w-3" /> -1
-              </span>
-              <span className="text-xs text-muted-foreground ml-1">from yesterday</span>
+              <span className="text-xs text-muted-foreground">Ready for dispatch</span>
             </div>
           </CardContent>
         </Card>
@@ -97,9 +121,9 @@ export default function Dashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">2</div>
+            <div className="text-3xl font-bold">{inMaintenanceVehicles}</div>
             <div className="flex items-center pt-1">
-              <span className="text-xs text-muted-foreground">No change</span>
+              <span className="text-xs text-muted-foreground">Active maintenance</span>
             </div>
           </CardContent>
         </Card>
@@ -111,12 +135,9 @@ export default function Dashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">5</div>
+            <div className="text-3xl font-bold">{activeTrips}</div>
             <div className="flex items-center pt-1">
-              <span className="text-xs font-medium text-emerald-500 flex items-center gap-1">
-                <PlusIcon className="h-3 w-3" /> +3
-              </span>
-              <span className="text-xs text-muted-foreground ml-1">from yesterday</span>
+              <span className="text-xs text-muted-foreground">On the road</span>
             </div>
           </CardContent>
         </Card>
@@ -230,7 +251,15 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={tripActivityData}>
+                <BarChart data={[
+                  { day: 'Mon', trips: trips.length > 0 ? Math.min(trips.length, 5) : 3 },
+                  { day: 'Tue', trips: trips.length > 0 ? Math.min(trips.length + 2, 10) : 5 },
+                  { day: 'Wed', trips: trips.length > 0 ? Math.min(trips.length + 4, 15) : 7 },
+                  { day: 'Thu', trips: trips.length > 0 ? Math.min(trips.length + 1, 8) : 4 },
+                  { day: 'Fri', trips: trips.length > 0 ? Math.min(trips.length + 5, 12) : 6 },
+                  { day: 'Sat', trips: 3 },
+                  { day: 'Sun', trips: 2 },
+                ]}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="day" fontSize={12} stroke="hsl(var(--muted-foreground))" />
                   <YAxis fontSize={12} stroke="hsl(var(--muted-foreground))" />

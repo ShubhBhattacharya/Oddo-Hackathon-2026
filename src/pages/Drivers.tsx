@@ -1,18 +1,44 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { PlusIcon, SearchIcon, EditIcon, TrashIcon } from 'lucide-react'
-
-const mockDrivers = [
-  { id: '1', name: 'John Doe', licenseNumber: 'DL-1234', licenseCategory: 'C', licenseExpiryDate: '2026-12-31', contactNumber: '+1 234 567 8900', safetyScore: 95, status: 'Available' },
-  { id: '2', name: 'Jane Smith', licenseNumber: 'DL-5678', licenseCategory: 'B', licenseExpiryDate: '2025-06-15', contactNumber: '+1 234 567 8901', safetyScore: 88, status: 'On Trip' },
-  { id: '3', name: 'Bob Johnson', licenseNumber: 'DL-9012', licenseCategory: 'D', licenseExpiryDate: '2027-03-20', contactNumber: '+1 234 567 8902', safetyScore: 92, status: 'Off Duty' },
-]
+import { PlusIcon, SearchIcon, EditIcon, TrashIcon, Loader2Icon } from 'lucide-react'
+import { db } from '@/lib/firebase'
+import { collection, onSnapshot } from 'firebase/firestore'
+import type { Driver } from '@/types'
 
 export default function Drivers() {
+  const [drivers, setDrivers] = useState<Driver[]>([])
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'drivers'), (snapshot) => {
+      const data = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Driver[]
+      setDrivers(data)
+      setLoading(false)
+    })
+    return unsubscribe
+  }, [])
+
+  const filteredDrivers = drivers.filter(driver => 
+    driver.name.toLowerCase().includes(search.toLowerCase()) ||
+    driver.licenseNumber.toLowerCase().includes(search.toLowerCase())
+  )
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <Loader2Icon className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -30,7 +56,12 @@ export default function Drivers() {
           <div className="flex items-center gap-4">
             <div className="relative flex-1 max-w-sm">
               <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Search drivers..." className="pl-10" />
+              <Input 
+                placeholder="Search drivers..." 
+                className="pl-10" 
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
             </div>
           </div>
         </CardHeader>
@@ -42,17 +73,25 @@ export default function Drivers() {
                 <TableHead>License</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Expiry</TableHead>
+                <TableHead>Contact</TableHead>
+                <TableHead>Safety Score</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockDrivers.map((driver) => (
+              {filteredDrivers.map((driver) => (
                 <TableRow key={driver.id}>
                   <TableCell className="font-medium">{driver.name}</TableCell>
                   <TableCell>{driver.licenseNumber}</TableCell>
                   <TableCell>{driver.licenseCategory}</TableCell>
-                  <TableCell>{driver.licenseExpiryDate}</TableCell>
+                  <TableCell>{new Date(driver.licenseExpiryDate).toLocaleDateString()}</TableCell>
+                  <TableCell>{driver.contactNumber}</TableCell>
+                  <TableCell>
+                    <Badge variant={driver.safetyScore >= 90 ? 'default' : driver.safetyScore >= 80 ? 'secondary' : 'destructive'}>
+                      {driver.safetyScore}
+                    </Badge>
+                  </TableCell>
                   <TableCell>
                     <Badge variant={driver.status === 'Available' ? 'default' : driver.status === 'On Trip' ? 'secondary' : 'outline'}>
                       {driver.status}
