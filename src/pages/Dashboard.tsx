@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { TruckIcon, UsersIcon, MapPinIcon, WrenchIcon, DollarSignIcon, ActivityIcon, BarChart3Icon, AlertCircleIcon, PlusIcon, CheckCircleIcon, XCircleIcon, ClockIcon, Loader2Icon, ZapIcon } from 'lucide-react'
+import { Truck, Users, MapPin, Wrench, Activity, Plus, CheckCircle, Loader2, Zap, AlertCircle } from 'lucide-react'
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { db } from '@/lib/firebase'
 import { collection, onSnapshot } from 'firebase/firestore'
@@ -19,21 +19,146 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const unsub1 = onSnapshot(collection(db, 'vehicles'), (snap) => setVehicles(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Vehicle[]))
-    const unsub2 = onSnapshot(collection(db, 'drivers'), (snap) => setDrivers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Driver[]))
-    const unsub3 = onSnapshot(collection(db, 'trips'), (snap) => setTrips(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Trip[]))
-    const unsub4 = onSnapshot(collection(db, 'maintenance'), (snap) => setMaintenance(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Maintenance[]))
-    const unsub5 = onSnapshot(collection(db, 'fuelLogs'), (snap) => setFuelLogs(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as FuelLog[]))
-    const unsub6 = onSnapshot(collection(db, 'expenses'), (snap) => setExpenses(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Expense[]))
+    let mounted = true
+    let hasLoaded = false
 
-    setLoading(false)
-    return () => { unsub1(); unsub2(); unsub3(); unsub4(); unsub5(); unsub6() }
+    const checkAllLoaded = () => {
+      if (mounted && !hasLoaded) {
+        hasLoaded = true
+        setLoading(false)
+      }
+    }
+
+    const unsub1 = onSnapshot(collection(db, 'vehicles'), (snap) => {
+      if (mounted) {
+        setVehicles(snap.docs.map(doc => {
+          const data = doc.data() as Omit<Vehicle, 'id'>
+          return {
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toDate?.() || new Date(),
+            updatedAt: data.updatedAt?.toDate?.() || new Date()
+          } as Vehicle
+        }))
+        checkAllLoaded()
+      }
+    }, (error) => {
+      console.error('Error fetching vehicles:', error)
+    })
+
+    const unsub2 = onSnapshot(collection(db, 'drivers'), (snap) => {
+      if (mounted) {
+        setDrivers(snap.docs.map(doc => {
+          const data = doc.data() as Omit<Driver, 'id'>
+          return {
+            id: doc.id,
+            ...data,
+            licenseExpiryDate: data.licenseExpiryDate?.toDate?.() || new Date(),
+            createdAt: data.createdAt?.toDate?.() || new Date(),
+            updatedAt: data.updatedAt?.toDate?.() || new Date()
+          } as Driver
+        }))
+        checkAllLoaded()
+      }
+    }, (error) => {
+      console.error('Error fetching drivers:', error)
+    })
+
+    const unsub3 = onSnapshot(collection(db, 'trips'), (snap) => {
+      if (mounted) {
+        setTrips(snap.docs.map(doc => {
+          const data = doc.data() as Omit<Trip, 'id'>
+          return {
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toDate?.() || new Date(),
+            updatedAt: data.updatedAt?.toDate?.() || new Date()
+          } as Trip
+        }))
+        checkAllLoaded()
+      }
+    }, (error) => {
+      console.error('Error fetching trips:', error)
+    })
+
+    const unsub4 = onSnapshot(collection(db, 'maintenance'), (snap) => {
+      if (mounted) {
+        setMaintenance(snap.docs.map(doc => {
+          const data = doc.data() as Omit<Maintenance, 'id'>
+          return {
+            id: doc.id,
+            ...data,
+            date: data.date?.toDate?.() || new Date(),
+            createdAt: data.createdAt?.toDate?.() || new Date(),
+            updatedAt: data.updatedAt?.toDate?.() || new Date()
+          } as Maintenance
+        }))
+        checkAllLoaded()
+      }
+    }, (error) => {
+      console.error('Error fetching maintenance:', error)
+    })
+
+    const unsub5 = onSnapshot(collection(db, 'fuelLogs'), (snap) => {
+      if (mounted) {
+        setFuelLogs(snap.docs.map(doc => {
+          const data = doc.data() as Omit<FuelLog, 'id'>
+          return {
+            id: doc.id,
+            ...data,
+            date: data.date?.toDate?.() || new Date(),
+            createdAt: data.createdAt?.toDate?.() || new Date(),
+            updatedAt: data.updatedAt?.toDate?.() || new Date()
+          } as FuelLog
+        }))
+        checkAllLoaded()
+      }
+    }, (error) => {
+      console.error('Error fetching fuel logs:', error)
+    })
+
+    const unsub6 = onSnapshot(collection(db, 'expenses'), (snap) => {
+      if (mounted) {
+        setExpenses(snap.docs.map(doc => {
+          const data = doc.data() as Omit<Expense, 'id'>
+          return {
+            id: doc.id,
+            ...data,
+            date: data.date?.toDate?.() || new Date(),
+            createdAt: data.createdAt?.toDate?.() || new Date(),
+            updatedAt: data.updatedAt?.toDate?.() || new Date()
+          } as Expense
+        }))
+        checkAllLoaded()
+      }
+    }, (error) => {
+      console.error('Error fetching expenses:', error)
+    })
+
+    // Set a timeout to ensure loading state is cleared even if some collections fail
+    const timeoutId = setTimeout(() => {
+      if (mounted && !hasLoaded) {
+        hasLoaded = true
+        setLoading(false)
+      }
+    }, 3000)
+
+    return () => {
+      mounted = false
+      clearTimeout(timeoutId)
+      unsub1()
+      unsub2()
+      unsub3()
+      unsub4()
+      unsub5()
+      unsub6()
+    }
   }, [])
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[80vh]">
-        <Loader2Icon className="h-12 w-12 animate-spin text-indigo-600" />
+        <Loader2 className="h-12 w-12 animate-spin text-indigo-600" />
       </div>
     )
   }
@@ -44,7 +169,7 @@ export default function Dashboard() {
   const inMaintenanceVehicles = maintenance.filter(m => m.status === 'Open').length || 2
   const activeTrips = trips.filter(t => t.status === 'Dispatched').length || 5
   
-  const avgSafetyScore = drivers.length > 0 ? Math.round(drivers.reduce((acc, curr) => acc + (curr.rating || 90), 0) / drivers.length) : 94;
+  const avgSafetyScore = drivers.length > 0 ? Math.round(drivers.reduce((acc, curr) => acc + (curr.safetyScore || 90), 0) / drivers.length) : 94;
 
   // Vehicle status for pie chart
   const vehicleStatusData = [
@@ -100,7 +225,7 @@ export default function Dashboard() {
         </div>
         <div className="flex items-center gap-3">
           <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200">
-            <ZapIcon className="h-4 w-4 mr-2" />
+            <Zap className="h-4 w-4 mr-2" />
             Live Sync
           </Button>
         </div>
@@ -114,10 +239,10 @@ export default function Dashboard() {
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
       >
         {[
-          { title: "Fleet Size", value: activeVehicles, sub: "Registered units", icon: TruckIcon, color: "text-indigo-600", bg: "bg-indigo-100" },
-          { title: "Available", value: availableVehicles, sub: "Ready for dispatch", icon: CheckCircleIcon, color: "text-emerald-600", bg: "bg-emerald-100" },
-          { title: "Active Trips", value: activeTrips, sub: "Currently on road", icon: MapPinIcon, color: "text-amber-600", bg: "bg-amber-100" },
-          { title: "Avg Safety", value: `${avgSafetyScore}%`, sub: "Driver rating", icon: ActivityIcon, color: "text-rose-600", bg: "bg-rose-100" }
+          { title: "Fleet Size", value: activeVehicles, sub: "Registered units", icon: Truck, color: "text-indigo-600", bg: "bg-indigo-100" },
+          { title: "Available", value: availableVehicles, sub: "Ready for dispatch", icon: CheckCircle, color: "text-emerald-600", bg: "bg-emerald-100" },
+          { title: "Active Trips", value: activeTrips, sub: "Currently on road", icon: MapPin, color: "text-amber-600", bg: "bg-amber-100" },
+          { title: "Avg Safety", value: `${avgSafetyScore}%`, sub: "Driver rating", icon: Activity, color: "text-rose-600", bg: "bg-rose-100" }
         ].map((kpi, idx) => (
           <motion.div key={idx} variants={itemVariants}>
             <Card className="overflow-hidden border-none shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 bg-white/80 backdrop-blur-xl">
@@ -182,14 +307,14 @@ export default function Dashboard() {
                 </div>
                 <div className="space-y-4">
                   <div className="flex gap-3">
-                    <div className="mt-0.5"><AlertCircleIcon className="h-4 w-4 text-rose-400" /></div>
+                    <div className="mt-0.5"><AlertCircle className="h-4 w-4 text-rose-400" /></div>
                     <div>
                       <p className="text-sm font-semibold">Vehicle MH-12 Temp High</p>
                       <p className="text-xs text-slate-400">2 mins ago • Refrigeration Unit</p>
                     </div>
                   </div>
                   <div className="flex gap-3">
-                    <div className="mt-0.5"><AlertCircleIcon className="h-4 w-4 text-amber-400" /></div>
+                    <div className="mt-0.5"><AlertCircle className="h-4 w-4 text-amber-400" /></div>
                     <div>
                       <p className="text-sm font-semibold">Route Deviation Detected</p>
                       <p className="text-xs text-slate-400">15 mins ago • Trip #TR-892</p>
@@ -269,15 +394,15 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent className="space-y-3">
               <Button className="w-full justify-start gap-3 h-12 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 hover:text-indigo-800 border-none shadow-sm transition-all hover:translate-x-1" variant="outline">
-                <div className="bg-indigo-200/50 p-1.5 rounded-md"><PlusIcon className="h-4 w-4" /></div>
+                <div className="bg-indigo-200/50 p-1.5 rounded-md"><Plus className="h-4 w-4" /></div>
                 New Dispatch Route
               </Button>
               <Button className="w-full justify-start gap-3 h-12 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 hover:text-emerald-800 border-none shadow-sm transition-all hover:translate-x-1" variant="outline">
-                <div className="bg-emerald-200/50 p-1.5 rounded-md"><UsersIcon className="h-4 w-4" /></div>
+                <div className="bg-emerald-200/50 p-1.5 rounded-md"><Users className="h-4 w-4" /></div>
                 Assign Driver Shift
               </Button>
               <Button className="w-full justify-start gap-3 h-12 bg-amber-50 hover:bg-amber-100 text-amber-700 hover:text-amber-800 border-none shadow-sm transition-all hover:translate-x-1" variant="outline">
-                <div className="bg-amber-200/50 p-1.5 rounded-md"><WrenchIcon className="h-4 w-4" /></div>
+                <div className="bg-amber-200/50 p-1.5 rounded-md"><Wrench className="h-4 w-4" /></div>
                 Log Maintenance
               </Button>
             </CardContent>

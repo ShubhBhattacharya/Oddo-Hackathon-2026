@@ -9,6 +9,7 @@ import { auth } from "@/lib/firebase";
 import { signOut } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
+import ChatBot from "@/components/ChatBot";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -158,6 +159,7 @@ export default function DashboardLayout() {
           <Outlet />
         </main>
       </div>
+      <ChatBot />
       <Toaster />
     </div>
   );
