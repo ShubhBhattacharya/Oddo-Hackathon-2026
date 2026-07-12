@@ -13,6 +13,8 @@ import Maintenance from './pages/Maintenance'
 import Fuel from './pages/Fuel'
 import Expenses from './pages/Expenses'
 import Reports from './pages/Reports'
+import Analytics from './pages/Analytics'
+import Settings from './pages/Settings'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -44,6 +46,8 @@ function App() {
         <Route path="fuel" element={<Fuel />} />
         <Route path="expenses" element={<Expenses />} />
         <Route path="reports" element={<Reports />} />
+        <Route path="analytics" element={<Analytics />} />
+        <Route path="settings" element={<Settings />} />
       </Route>
     </Routes>
   )

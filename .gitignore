@@ -32,3 +32,13 @@ secrets.json
 keys.json
 firebase-service-account.json
 service-account.json
+
+# API/Backend related
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+transitops.db
+app.py
+driver.html
+component/
