@@ -3,726 +3,229 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TransitOps - Smart Transport Operations Platform</title>
+    <title>TransitOps - Dynamic Fleet</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
-<body class="bg-gray-50 font-sans text-sm text-gray-700">
+<body class="bg-gray-50 text-sm text-gray-700 select-none">
+
+    <div id="loginOverlay" class="fixed inset-0 bg-slate-950 flex items-center justify-center z-[100] p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+            <h1 class="text-3xl font-extrabold text-indigo-600 text-center mb-6">TransitOps 🔐</h1>
+            <form onsubmit="handleAuth(event)" class="space-y-4">
+                <input type="text" id="authUsername" required placeholder="Username" class="w-full px-4 py-2 border rounded-xl">
+                <input type="password" id="authPassword" required placeholder="Password" class="w-full px-4 py-2 border rounded-xl">
+                <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-3 rounded-xl">Authenticate</button>
+            </form>
+        </div>
+    </div>
 
     <div class="flex h-screen overflow-hidden">
         <div class="w-64 bg-slate-900 text-white p-6 hidden md:flex flex-col justify-between">
-            <div>
-                <h1 class="text-2xl font-bold tracking-wider mb-8 text-indigo-400">TransitOps</h1>
-                <nav class="space-y-2" id="sidebarMenu">
-                    <button onclick="switchTab('dashboard')" id="btn-dashboard" class="w-full text-left py-2.5 px-4 rounded transition bg-indigo-600 font-semibold text-white">Dashboard</button>
-                    <button onclick="switchTab('vehicles')" id="btn-vehicles" class="w-full text-left py-2.5 px-4 rounded transition text-gray-300 hover:bg-slate-800">Vehicle Registry</button>
-                    <button onclick="switchTab('drivers')" id="btn-drivers" class="w-full text-left py-2.5 px-4 rounded transition text-gray-300 hover:bg-slate-800">Driver Management</button>
-                    <button onclick="switchTab('trips')" id="btn-trips" class="w-full text-left py-2.5 px-4 rounded transition text-gray-300 hover:bg-slate-800">Trip Management</button>
-                    <button onclick="switchTab('maintenance')" id="btn-maintenance" class="w-full text-left py-2.5 px-4 rounded transition text-gray-300 hover:bg-slate-800">Maintenance</button>
-                    <button onclick="switchTab('expenses')" id="btn-expenses" class="w-full text-left py-2.5 px-4 rounded transition text-gray-300 hover:bg-slate-800">Expenses & Fuel</button>
-                </nav>
-            </div>
-            <div class="text-xs text-gray-500 border-t border-slate-800 pt-4">
-                Odoo Hackathon 2026 • 8-Hour Build
-            </div>
+            <nav class="space-y-2" id="sidebarMenu">
+                <h1 class="text-2xl font-bold tracking-wider mb-6 text-indigo-400">TransitOps</h1>
+                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="w-full text-left py-2.5 px-4 rounded bg-indigo-600 font-semibold">Dashboard</button>
+                <button onclick="switchTab('vehicles')" id="btn-vehicles" class="w-full text-left py-2.5 px-4 rounded text-gray-300 hover:bg-slate-800">Vehicles</button>
+                <button onclick="switchTab('drivers')" id="btn-drivers" class="w-full text-left py-2.5 px-4 rounded text-gray-300 hover:bg-slate-800">Drivers</button>
+                <button onclick="switchTab('trips')" id="btn-trips" class="w-full text-left py-2.5 px-4 rounded text-gray-300 hover:bg-slate-800">Trips</button>
+                <button onclick="switchTab('comms')" id="btn-comms" class="w-full text-left py-2.5 px-4 rounded text-gray-300 hover:bg-slate-800">Comms Hub 💬</button>
+            </nav>
+            <button onclick="triggerLogout()" class="w-full bg-slate-800 py-2 rounded text-xs">Logout</button>
         </div>
 
         <div class="flex-1 flex flex-col h-full overflow-hidden">
-            <header class="bg-white shadow-sm px-8 py-4 flex justify-between items-center z-10">
-                <h2 class="text-xl font-semibold text-gray-800" id="currentTabTitle">Dashboard</h2>
-                <div class="flex items-center space-x-4">
-                    <span class="text-sm bg-indigo-100 text-indigo-800 font-medium px-2.5 py-0.5 rounded-full">Fleet Operations Control</span>
-                    <div class="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold">OPS</div>
-                </div>
+            <header class="bg-white shadow-sm px-8 py-4 flex justify-between items-center">
+                <h2 class="text-xl font-semibold text-gray-800" id="currentTabTitle">Dashboard Module</h2>
+                <span id="roleBadge" class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-xs font-bold">Manager Mode</span>
             </header>
 
             <div class="flex-1 overflow-y-auto p-8" id="viewContainer">
                 
                 <div id="view-dashboard" class="tab-view space-y-6">
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div class="bg-white p-5 rounded-xl shadow-xs border border-gray-200">
-                            <div class="text-xs font-semibold text-gray-400 uppercase">Active / Total Vehicles</div>
-                            <div class="text-2xl font-bold text-gray-900 mt-1" id="kpi-vehicles">0 / 0</div>
+                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-xs">
+                            <div class="text-xs font-semibold text-gray-400">TOTAL VEHICLES</div>
+                            <div class="text-2xl font-bold mt-1" id="kpi-vehicles">0</div>
                         </div>
-                        <div class="bg-white p-5 rounded-xl shadow-xs border border-gray-200">
-                            <div class="text-xs font-semibold text-gray-400 uppercase">Drivers On Duty</div>
-                            <div class="text-2xl font-bold text-gray-900 mt-1" id="kpi-drivers">0</div>
+                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-xs">
+                            <div class="text-xs font-semibold text-gray-400">TOTAL DRIVERS</div>
+                            <div class="text-2xl font-bold mt-1" id="kpi-drivers">0</div>
                         </div>
-                        <div class="bg-white p-5 rounded-xl shadow-xs border border-gray-200">
-                            <div class="text-xs font-semibold text-gray-400 uppercase">Active / Pending Trips</div>
-                            <div class="text-2xl font-bold text-gray-900 mt-1" id="kpi-trips">0 / 0</div>
+                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-xs">
+                            <div class="text-xs font-semibold text-gray-400">ACTIVE TRIPS</div>
+                            <div class="text-2xl font-bold mt-1" id="kpi-trips">0</div>
                         </div>
-                        <div class="bg-white p-5 rounded-xl shadow-xs border border-gray-200">
-                            <div class="text-xs font-semibold text-gray-400 uppercase">Fleet Utilization</div>
-                            <div class="text-2xl font-bold text-indigo-600 mt-1" id="kpi-utilization">0%</div>
-                        </div>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-xs border border-gray-200 p-6">
-                        <h3 class="text-base font-semibold text-gray-800 mb-4">Live Dispatch Operational Log</h3>
-                        <p class="text-gray-500 text-xs mb-4">Real-time status updates from active vehicle lifecycles, maintenance statuses, and scheduled freight logs.</p>
-                        <div class="border border-gray-100 rounded-lg p-4 bg-gray-50 max-h-60 overflow-y-auto font-mono text-xs space-y-1.5 text-slate-600" id="liveLogConsole">
-                            [SYSTEM INIT]: TransitOps platform ready. All sub-modules operational.
+                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-xs">
+                            <div class="text-xs font-semibold text-gray-400">NETWORK CACHE</div>
+                            <div class="text-2xl font-bold text-emerald-600 mt-1">OPTIMIZED</div>
                         </div>
                     </div>
                 </div>
 
                 <div id="view-vehicles" class="tab-view hidden space-y-4">
-                    <div class="flex justify-between items-center">
-                        <input type="text" id="searchVehicleInput" oninput="filterTable('searchVehicleInput', 'vehicleTableBody')" placeholder="Search vehicles by plate/model..." class="px-4 py-2 border border-gray-300 rounded-lg w-72">
-                        <button onclick="openVehicleModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium text-xs">+ Register Vehicle</button>
-                    </div>
-                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-xs">
-                        <table class="w-full text-left border-collapse">
-                            <thead class="bg-gray-50 text-xs font-semibold uppercase text-gray-500 border-b border-gray-200">
-                                <tr>
-                                    <th class="px-6 py-3.5">Reg Number</th>
-                                    <th class="px-6 py-3.5">Model / Type</th>
-                                    <th class="px-6 py-3.5">Capacity Limit</th>
-                                    <th class="px-6 py-3.5">Odometer</th>
-                                    <th class="px-6 py-3.5 text-center">Status</th>
-                                    <th class="px-6 py-3.5 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="vehicleTableBody" class="divide-y divide-gray-100"></tbody>
-                        </table>
+                    <div class="bg-white rounded-xl border overflow-hidden">
+                        <table class="w-full text-left"><thead class="bg-gray-50 text-xs"><tr><th class="px-6 py-3">Reg</th><th class="px-6 py-3">Model</th><th class="px-6 py-3">Status</th></tr></thead><tbody id="vehicleTableBody" class="divide-y"></tbody></table>
                     </div>
                 </div>
 
                 <div id="view-drivers" class="tab-view hidden space-y-4">
-                    <div class="flex justify-between items-center">
-                        <input type="text" id="searchDriverInput" oninput="filterTable('searchDriverInput', 'driverTableBody')" placeholder="Search drivers..." class="px-4 py-2 border border-gray-300 rounded-lg w-72">
-                        <button onclick="openDriverModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium text-xs">+ Add New Driver</button>
-                    </div>
-                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-xs">
-                        <table class="w-full text-left border-collapse">
-                            <thead class="bg-gray-50 text-xs font-semibold uppercase text-gray-500 border-b border-gray-200">
-                                <tr>
-                                    <th class="px-6 py-3.5">Driver Name</th>
-                                    <th class="px-6 py-3.5">License Details</th>
-                                    <th class="px-6 py-3.5">Contact</th>
-                                    <th class="px-6 py-3.5 text-center">Safety Score</th>
-                                    <th class="px-6 py-3.5 text-center">Status</th>
-                                    <th class="px-6 py-3.5 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="driverTableBody" class="divide-y divide-gray-100"></tbody>
-                        </table>
+                    <div class="bg-white rounded-xl border overflow-hidden">
+                        <table class="w-full text-left"><thead class="bg-gray-50 text-xs"><tr><th class="px-6 py-3">Name</th><th class="px-6 py-3">Score</th><th class="px-6 py-3">Status</th></tr></thead><tbody id="driverTableBody" class="divide-y"></tbody></table>
                     </div>
                 </div>
 
                 <div id="view-trips" class="tab-view hidden space-y-4">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-base font-semibold text-gray-800">Active Delivery Dispatches</h3>
-                        <button onclick="openTripModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium text-xs">+ Dispatch New Trip</button>
-                    </div>
-                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-xs">
-                        <table class="w-full text-left border-collapse">
-                            <thead class="bg-gray-50 text-xs font-semibold uppercase text-gray-500 border-b border-gray-200">
-                                <tr>
-                                    <th class="px-6 py-3.5">Route</th>
-                                    <th class="px-6 py-3.5">Assigned Vehicle</th>
-                                    <th class="px-6 py-3.5">Assigned Driver</th>
-                                    <th class="px-6 py-3.5">Cargo Details</th>
-                                    <th class="px-6 py-3.5 text-center">Stage</th>
-                                    <th class="px-6 py-3.5 text-right">Execution</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tripTableBody" class="divide-y divide-gray-100"></tbody>
-                        </table>
+                    <div class="bg-white rounded-xl border overflow-hidden">
+                        <table class="w-full text-left"><thead class="bg-gray-50 text-xs"><tr><th class="px-6 py-3">Route</th><th class="px-6 py-3">Vehicle</th><th class="px-6 py-3">Driver</th><th class="px-6 py-3">Stage</th></tr></thead><tbody id="tripTableBody" class="divide-y"></tbody></table>
                     </div>
                 </div>
 
-                <div id="view-maintenance" class="tab-view hidden space-y-4">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-base font-semibold text-gray-800">Fleet Shop Operations</h3>
-                        <button onclick="openMaintenanceModal()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium text-xs">+ Create Repair Log</button>
-                    </div>
-                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-xs">
-                        <table class="w-full text-left border-collapse">
-                            <thead class="bg-gray-50 text-xs font-semibold uppercase text-gray-500 border-b border-gray-200">
-                                <tr>
-                                    <th class="px-6 py-3.5">Vehicle</th>
-                                    <th class="px-6 py-3.5">Issue Description</th>
-                                    <th class="px-6 py-3.5">Logged Date</th>
-                                    <th class="px-6 py-3.5 text-center">Status</th>
-                                    <th class="px-6 py-3.5 text-right">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="maintenanceTableBody" class="divide-y divide-gray-100"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div id="view-expenses" class="tab-view hidden space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-xs space-y-4">
-                            <h3 class="text-base font-semibold text-gray-800">Record Operational Expenses</h3>
-                            <form onsubmit="saveExpense(event)" class="space-y-3">
-                                <div>
-                                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Target Vehicle</label>
-                                    <select id="expenseVehicle" required class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white"></select>
-                                </div>
-                                <div class="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Fuel Log (Liters)</label>
-                                        <input type="number" id="expenseFuelLiters" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Cost (₹ Amount)</label>
-                                        <input type="number" id="expenseAmount" required class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Category Type</label>
-                                    <select id="expenseCategory" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white">
-                                        <option value="Fuel">Fuel Cost</option>
-                                        <option value="Maintenance">Maintenance / Spare parts</option>
-                                        <option value="Toll">Tolls & Miscellaneous</option>
-                                    </select>
-                                </div>
-                                <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-2 rounded-lg text-xs mt-2">Log Line Expense</button>
+                <div id="view-comms" class="tab-view hidden space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white p-6 rounded-xl border space-y-4">
+                            <h3 class="text-base font-bold">Transmit Dispatch Alert</h3>
+                            <form onsubmit="sendDriverAlert(event)" class="space-y-3">
+                                <select id="commDriverSelect" required class="w-full px-3 py-2 border rounded-lg bg-white text-xs"></select>
+                                <textarea id="commMessage" required placeholder="Type emergency broadcast..." class="w-full px-3 py-2 border rounded-lg text-xs h-24"></textarea>
+                                <button type="submit" class="w-full bg-indigo-600 text-white font-medium py-2 rounded-lg text-xs">Transmit Alert</button>
                             </form>
                         </div>
-                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-xs">
-                            <h3 class="text-base font-semibold text-gray-800 mb-4">Vehicle Financial ROI & Fleet Performance Matrix</h3>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-left border-collapse text-xs">
-                                    <thead class="bg-gray-50 text-gray-500 uppercase font-semibold border-b border-gray-200">
-                                        <tr>
-                                            <th class="px-4 py-2">Vehicle</th>
-                                            <th class="px-4 py-2">Fuel Efficiency</th>
-                                            <th class="px-4 py-2">Total Op Cost</th>
-                                            <th class="px-4 py-2 text-right">ROI Rank</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="analyticsTableBody" class="divide-y divide-gray-100"></tbody>
-                                </table>
-                            </div>
+                        <div class="bg-white p-6 rounded-xl border md:col-span-2">
+                            <h3 class="text-base font-bold mb-4">Live Database Transmission Logs</h3>
+                            <div class="border rounded-xl p-4 bg-slate-950 text-emerald-400 font-mono text-xs h-64 overflow-y-auto space-y-2" id="alertLiveLogs"></div>
                         </div>
                     </div>
                 </div>
 
             </div>
-        </div>
-    </div>
-
-    <div id="vehicleModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
-            <div class="bg-slate-950 px-6 py-4 text-white flex justify-between items-center">
-                <h3 class="text-base font-semibold">Register Fleet Asset</h3>
-                <button onclick="closeVehicleModal()" class="text-gray-400 hover:text-white font-bold text-xl">&times;</button>
-            </div>
-            <form onsubmit="saveVehicle(event)" class="p-6 space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Registration No (Unique)</label>
-                        <input type="text" id="vReg" required placeholder="DL-01-A-1234" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Model / Name</label>
-                        <input type="text" id="vModel" required placeholder="Tata Ace Gold" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs">
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Vehicle Type</label>
-                        <select id="vType" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-xs">
-                            <option value="Mini Truck">Mini Truck</option>
-                            <option value="Heavy Hauler">Heavy Hauler</option>
-                            <option value="Container Van">Container Van</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Max Load Capacity (kg)</label>
-                        <input type="number" id="vCap" required placeholder="850" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs">
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Odometer Reading (km)</label>
-                        <input type="number" id="vOdo" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Acquisition Cost (₹)</label>
-                        <input type="number" id="vCost" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs">
-                    </div>
-                </div>
-                <div class="flex justify-end space-x-2 pt-4 border-t border-gray-100">
-                    <button type="button" onclick="closeVehicleModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs">Save Asset</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div id="driverModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
-            <div class="bg-slate-950 px-6 py-4 text-white flex justify-between items-center">
-                <h3 class="text-base font-semibold">Register Operator Identity</h3>
-                <button onclick="closeDriverModal()" class="text-gray-400 hover:text-white font-bold text-xl">&times;</button>
-            </div>
-            <form onsubmit="saveDriver(event)" class="p-6 space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Full Name</label>
-                        <input type="text" id="dName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Contact Phone</label>
-                        <input type="tel" id="dContact" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs">
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">License Number</label>
-                        <input type="text" id="dLicense" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">License Class</label>
-                        <select id="dCat" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-xs">
-                            <option value="LMV">LMV (Light Commercial)</option>
-                            <option value="HMV">HMV (Heavy Motor)</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">License Expiry Date</label>
-                        <input type="date" id="dExpiry" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Initial Safety Score</label>
-                        <input type="number" id="dScore" min="0" max="100" value="100" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs">
-                    </div>
-                </div>
-                <div class="flex justify-end space-x-2 pt-4 border-t border-gray-100">
-                    <button type="button" onclick="closeDriverModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs">Save Profile</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div id="tripModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
-            <div class="bg-slate-950 px-6 py-4 text-white flex justify-between items-center">
-                <h3 class="text-base font-semibold">Manifest Freight Dispatch</h3>
-                <button onclick="closeTripModal()" class="text-gray-400 hover:text-white font-bold text-xl">&times;</button>
-            </div>
-            <form onsubmit="saveTrip(event)" class="p-6 space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Source Point</label>
-                        <input type="text" id="tSource" required placeholder="Warehouse Alpha" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Destination Target</label>
-                        <input type="text" id="tDest" required placeholder="Hub Delhi" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs">
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Assign Fleet Vehicle</label>
-                        <select id="tVehicle" required class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-xs"></select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Assign Driver Captain</label>
-                        <select id="tDriver" required class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-xs"></select>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Cargo Payload Weight (kg)</label>
-                        <input type="number" id="tWeight" required placeholder="500" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 mb-1">Planned Distance (km)</label>
-                        <input type="number" id="tDist" required placeholder="180" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs">
-                    </div>
-                </div>
-                <div class="flex justify-end space-x-2 pt-4 border-t border-gray-100">
-                    <button type="button" onclick="closeTripModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs">Launch Route Dispatch</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div id="maintenanceModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
-            <div class="bg-slate-950 px-6 py-4 text-white flex justify-between items-center">
-                <h3 class="text-base font-semibold">Log Shop Maintenance Docket</h3>
-                <button onclick="closeMaintenanceModal()" class="text-gray-400 hover:text-white font-bold text-xl">&times;</button>
-            </div>
-            <form onsubmit="saveMaintenance(event)" class="p-6 space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-500 mb-1">Select Fleet Asset</label>
-                    <select id="mVehicle" required class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-xs"></select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-500 mb-1">Repair Diagnostics / Issue Description</label>
-                    <textarea id="mDesc" required placeholder="Describe brake failure, engine oil viscosity leak, etc." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs h-20"></textarea>
-                </div>
-                <div class="flex justify-end space-x-2 pt-4 border-t border-gray-100">
-                    <button type="button" onclick="closeMaintenanceModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs">Isolate Asset to Shop</button>
-                </div>
-            </form>
         </div>
     </div>
 
     <script>
-        // Central Memory States linked with LocalStorage for end-to-end flow consistency
-        let vehicles = JSON.parse(localStorage.getItem('to_v')) || [
-            { reg: "DL-01-M-5555", model: "Tata Ace Gold", type: "Mini Truck", cap: 850, odo: 12400, cost: 650000, status: "Available", revenue: 45000, fuelSpent: 320, maintSpent: 12000 },
-            { reg: "HR-55-P-9999", model: "Mahindra Bolero", type: "Container Van", cap: 1200, odo: 34800, cost: 980000, status: "Available", revenue: 89000, fuelSpent: 640, maintSpent: 18000 }
-        ];
+        const API_URL = "http://127.0.0.1:5000/api";
+        let sessionActive = sessionStorage.getItem('__secure_token') ? true : false;
+        
+        // OPTIMIZATION CACHE SYSTEM: Holds data locally to prevent redundant API thrashing
+        let localStateCache = null; 
 
-        let drivers = JSON.parse(localStorage.getItem('to_d')) || [
-            { name: "Alex Kumar", license: "DL-14202600123", category: "HMV", expiry: "2028-12-12", contact: "+91 98765 43210", score: 94, status: "Available" },
-            { name: "Rahul Sharma", license: "DL-16202400987", category: "HMV", expiry: "2026-05-10", contact: "+91 87654 32109", score: 78, status: "Suspended" },
-            { name: "Rohan", license: "349056", category: "HMV", expiry: "2026-07-21", contact: "4568090223", score: 100, status: "Available" }
-        ];
+        function handleAuth(e) {
+            e.preventDefault();
+            sessionActive = true;
+            sessionStorage.setItem('__secure_token', 'TOKEN_' + Date.now());
+            document.getElementById('loginOverlay').classList.add('hidden');
+            fetchOptimizeState(true); // Force API pull on login
+        }
 
-        let trips = JSON.parse(localStorage.getItem('to_t')) || [];
-        let maintenanceLogs = JSON.parse(localStorage.getItem('to_m')) || [];
+        function triggerLogout() {
+            sessionStorage.clear();
+            sessionActive = false;
+            document.getElementById('loginOverlay').classList.remove('hidden');
+        }
 
-        // Single Page Navigation Controller
         function switchTab(tabId) {
+            if(!sessionActive) return;
             document.querySelectorAll('.tab-view').forEach(el => el.classList.add('hidden'));
             document.getElementById(`view-${tabId}`).classList.remove('hidden');
-
-            document.querySelectorAll('#sidebarMenu button').forEach(el => {
-                el.classList.remove('bg-indigo-600', 'font-semibold', 'text-white');
-                el.classList.add('text-gray-300', 'hover:bg-slate-800');
-            });
-            const activeBtn = document.getElementById(`btn-${tabId}`);
-            activeBtn.classList.remove('text-gray-300', 'hover:bg-slate-800');
-            activeBtn.classList.add('bg-indigo-600', 'font-semibold', 'text-white');
-
-            // Format titles cleanly
+            
+            document.querySelectorAll('#sidebarMenu button').forEach(el => el.classList.remove('bg-indigo-600', 'text-white'));
+            document.getElementById(`btn-${tabId}`).classList.add('bg-indigo-600', 'text-white');
+            
             document.getElementById('currentTabTitle').innerText = tabId.charAt(0).toUpperCase() + tabId.slice(1) + " Module";
             
-            // Re-render components dynamically to match updated data cross-flows
-            renderAll();
+            // OPTIMIZED ACTION: Read from local state memory instead of spamming server
+            if (localStateCache) {
+                renderUIFromCache();
+            } else {
+                fetchOptimizeState();
+            }
         }
 
-        function logEvent(msg) {
-            const consoleEl = document.getElementById('liveLogConsole');
-            const stamp = new Date().toLocaleTimeString();
-            consoleEl.innerHTML += `<br>[${stamp}]: ${msg}`;
-            consoleEl.scrollTop = consoleEl.scrollHeight;
+        async function fetchOptimizeState(force = false) {
+            if(!sessionActive) return;
+            // If cache exists and no force parameter is passed, bypass database hit
+            if(localStateCache && !force) {
+                renderUIFromCache();
+                return;
+            }
+            try {
+                const response = await fetch(`${API_URL}/dashboard`);
+                localStateCache = await response.json(); // Data cached into state memory
+                renderUIFromCache();
+            } catch (err) {
+                console.error("Backend Server Unreachable.", err);
+            }
         }
 
-        // ================= RENDERING LAYER =================
-        function renderAll() {
-            renderKPIs();
-            renderVehicles();
-            renderDrivers();
-            renderTrips();
-            renderMaintenance();
-            renderExpensesDropdowns();
-            renderAnalytics();
-
-            // Store back state changes locally
-            localStorage.setItem('to_v', JSON.stringify(vehicles));
-            localStorage.setItem('to_d', JSON.stringify(drivers));
-            localStorage.setItem('to_t', JSON.stringify(trips));
-            localStorage.setItem('to_m', JSON.stringify(maintenanceLogs));
-        }
-
-        function renderKPIs() {
-            const activeV = vehicles.filter(v => v.status === 'On Trip').length;
-            const onDutyD = drivers.filter(d => d.status === 'On Trip' || d.status === 'Available').length;
-            const activeT = trips.filter(t => t.stage === 'Dispatched').length;
-            const pendingT = trips.filter(t => t.stage === 'Draft').length;
-
-            document.getElementById('kpi-vehicles').innerText = `${activeV} / ${vehicles.length}`;
-            document.getElementById('kpi-drivers').innerText = onDutyD;
-            document.getElementById('kpi-trips').innerText = `${activeT} / ${pendingT}`;
+        function renderUIFromCache() {
+            if(!localStateCache) return;
             
-            const util = vehicles.length ? Math.round((activeV / vehicles.length) * 100) : 0;
-            document.getElementById('kpi-utilization').innerText = `${util}%`;
-        }
+            // 1. Render Dashboard Metrics
+            document.getElementById('kpi-vehicles').innerText = localStateCache.vehicles.length;
+            document.getElementById('kpi-drivers').innerText = localStateCache.drivers.length;
+            document.getElementById('kpi-trips').innerText = localStateCache.trips.length;
 
-        function renderVehicles() {
-            const tbody = document.getElementById('vehicleTableBody');
-            tbody.innerHTML = '';
-            vehicles.forEach((v, index) => {
-                let badge = v.status === 'Available' ? 'bg-emerald-100 text-emerald-800' : (v.status === 'On Trip' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800');
-                tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 font-semibold text-gray-900">${v.reg}</td>
-                        <td class="px-6 py-4">${v.model} <span class="text-xs text-gray-400">(${v.type})</span></td>
-                        <td class="px-6 py-4">${v.cap} kg</td>
-                        <td class="px-6 py-4">${v.odo} km</td>
-                        <td class="px-6 py-4 text-center"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${badge}">${v.status}</span></td>
-                        <td class="px-6 py-4 text-right text-xs"><button onclick="deleteVehicle(${index})" class="text-red-600 hover:underline">Delete</button></td>
-                    </tr>
-                `;
+            // 2. Render Vehicles Dynamic Grid
+            const vBody = document.getElementById('vehicleTableBody');
+            vBody.innerHTML = '';
+            localStateCache.vehicles.forEach(v => {
+                vBody.innerHTML += `<tr class="hover:bg-gray-50"><td class="px-6 py-4 font-semibold">${v.reg}</td><td class="px-6 py-4">${v.model}</td><td class="px-6 py-4"><span class="px-2 py-0.5 rounded text-xs bg-emerald-100 text-emerald-800">${v.status}</span></td></tr>`;
             });
-        }
 
-        function renderDrivers() {
-            const tbody = document.getElementById('driverTableBody');
-            tbody.innerHTML = '';
-            const today = new Date();
-            drivers.forEach((d, index) => {
-                const expired = new Date(d.expiry) < today;
-                let badge = d.status === 'Available' ? 'bg-emerald-100 text-emerald-800' : (d.status === 'Suspended' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800');
-                tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 font-semibold text-gray-900">${d.name}</td>
-                        <td class="px-6 py-4">${d.license}<br><span class="text-xs ${expired ? 'text-red-500 font-bold':'text-gray-400'}">${d.category} • Exp: ${d.expiry}</span></td>
-                        <td class="px-6 py-4">${d.contact}</td>
-                        <td class="px-6 py-4 text-center font-bold text-indigo-600">${d.score}/100</td>
-                        <td class="px-6 py-4 text-center"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${badge}">${d.status}</span></td>
-                        <td class="px-6 py-4 text-right text-xs"><button onclick="deleteDriver(${index})" class="text-red-600 hover:underline">Delete</button></td>
-                    </tr>
-                `;
+            // 3. Render Drivers Dynamic Grid
+            const dBody = document.getElementById('driverTableBody');
+            dBody.innerHTML = '';
+            localStateCache.drivers.forEach(d => {
+                dBody.innerHTML += `<tr class="hover:bg-gray-50"><td class="px-6 py-4 font-medium">${d.name}</td><td class="px-6 py-4 text-indigo-600 font-bold">${d.score}/100</td><td class="px-6 py-4"><span class="px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-800">${d.status}</span></td></tr>`;
             });
-        }
 
-        function renderTrips() {
-            const tbody = document.getElementById('tripTableBody');
-            tbody.innerHTML = '';
-            trips.forEach((t, index) => {
-                let actionBtn = '';
-                if(t.stage === 'Dispatched') {
-                    actionBtn = `<button onclick="completeTrip(${index})" class="bg-emerald-600 text-white px-2.5 py-1 rounded text-xs">Complete</button>
-                                 <button onclick="cancelTrip(${index})" class="bg-amber-500 text-white px-2.5 py-1 rounded text-xs ml-1">Cancel</button>`;
-                } else {
-                    actionBtn = `<span class="text-gray-400 text-xs">Closed</span>`;
-                }
-
-                tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 font-medium">${t.source} &rarr; ${t.dest}<br><span class="text-xs text-gray-400">${t.dist} km planned</span></td>
-                        <td class="px-6 py-4 font-mono text-xs">${t.vehicle}</td>
-                        <td class="px-6 py-4">${t.driver}</td>
-                        <td class="px-6 py-4 text-xs">Payload: <b>${t.weight} kg</b></td>
-                        <td class="px-6 py-4 text-center"><span class="text-xs font-bold uppercase">${t.stage}</span></td>
-                        <td class="px-6 py-4 text-right">${actionBtn}</td>
-                    </tr>
-                `;
+            // 4. Render Trips Dynamic Grid
+            const tBody = document.getElementById('tripTableBody');
+            tBody.innerHTML = '';
+            localStateCache.trips.forEach(t => {
+                tBody.innerHTML += `<tr class="hover:bg-gray-50"><td class="px-6 py-4">${t.source} &rarr; ${t.dest}</td><td class="px-6 py-4 font-mono text-xs">${t.vehicle}</td><td class="px-6 py-4">${t.driver}</td><td class="px-6 py-4 text-indigo-600 font-bold">${t.stage}</td></tr>`;
             });
+
+            // 5. Render Communication Components
+            const select = document.getElementById('commDriverSelect');
+            if(select && select.innerHTML === '') {
+                localStateCache.drivers.forEach(d => { select.innerHTML += `<option value="${d.license}">${d.name}</option>`; });
+            }
+            
+            const logs = document.getElementById('alertLiveLogs');
+            if(logs) {
+                logs.innerHTML = '';
+                localStateCache.alerts.forEach(a => {
+                    logs.innerHTML += `<div>[${a.timestamp}] Target [${a.driver_lic}] &rarr; <span class="text-white">${a.message}</span></div>`;
+                });
+            }
         }
 
-        function renderMaintenance() {
-            const tbody = document.getElementById('maintenanceTableBody');
-            tbody.innerHTML = '';
-            maintenanceLogs.forEach((m, index) => {
-                let action = m.active ? `<button onclick="closeMaintenance(${index})" class="bg-slate-900 text-white px-2.5 py-1 rounded text-xs">Release / Close</button>` : '<span class="text-gray-400">Resolved</span>';
-                tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 font-semibold text-red-600 font-mono text-xs">${m.vehicle}</td>
-                        <td class="px-6 py-4 text-xs">${m.desc}</td>
-                        <td class="px-6 py-4 text-xs">${m.date}</td>
-                        <td class="px-6 py-4 text-center"><span class="text-xs font-bold">${m.active ? 'IN SHOP':'RELEASED'}</span></td>
-                        <td class="px-6 py-4 text-right">${action}</td>
-                    </tr>
-                `;
-            });
-        }
-
-        function renderExpensesDropdowns() {
-            const ev = document.getElementById('expenseVehicle');
-            ev.innerHTML = '';
-            vehicles.forEach(v => ev.innerHTML += `<option value="${v.reg}">${v.reg} (${v.model})</option>`);
-        }
-
-        function renderAnalytics() {
-            const tbody = document.getElementById('analyticsTableBody');
-            tbody.innerHTML = '';
-            vehicles.forEach(v => {
-                const efficiency = v.fuelSpent > 0 ? (v.odo / v.fuelSpent).toFixed(1) : '0.0';
-                // Business Metric Formula ROI logic 
-                const roi = v.cost > 0 ? (((v.revenue - (v.maintSpent + (v.fuelSpent * 95))) / v.cost) * 100).toFixed(1) : '0.0';
-
-                tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-4 py-3 font-semibold font-mono">${v.reg}</td>
-                        <td class="px-4 py-3">${efficiency} km/L</td>
-                        <td class="px-4 py-3">₹ ${(v.maintSpent + (v.fuelSpent * 95)).toLocaleString()}</td>
-                        <td class="px-4 py-3 text-right font-bold text-indigo-600">${roi} %</td>
-                    </tr>
-                `;
-            });
-        }
-
-        // ================= OPERATION MUTATIONS & BUSINESS RULES =================
-        function saveVehicle(e) {
+        async function sendDriverAlert(e) {
             e.preventDefault();
-            const reg = document.getElementById('vReg').value.trim().toUpperCase();
-            if(vehicles.some(v => v.reg === reg)) { alert("Business Rule Violation: Vehicle Registration Number must be completely unique."); return; }
+            const lic = document.getElementById('commDriverSelect').value;
+            const msg = document.getElementById('commMessage').value.trim();
 
-            vehicles.push({
-                reg: reg,
-                model: document.getElementById('vModel').value.trim(),
-                type: document.getElementById('vType').value,
-                cap: parseInt(document.getElementById('vCap').value),
-                odo: parseInt(document.getElementById('vOdo').value) || 0,
-                cost: parseInt(document.getElementById('vCost').value) || 100000,
-                status: "Available", revenue: 0, fuelSpent: 0, maintSpent: 0
-            });
-            logEvent(`Registered new fleet asset ${reg}`);
-            closeVehicleModal(); renderAll();
+            try {
+                const res = await fetch(`${API_URL}/driver/contact`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ driver_lic: lic, message: msg })
+                });
+                const result = await res.json();
+                document.getElementById('commMessage').value = '';
+                fetchOptimizeState(true); // Force state reload to invalidate cache and refresh UI log
+            } catch (err) {
+                alert("Database synchronization failed.");
+            }
         }
 
-        function saveDriver(e) {
-            e.preventDefault();
-            const lic = document.getElementById('dLicense').value.trim();
-            if(drivers.some(d => d.license === lic)) { alert("Business Rule Error: Driving License entry duplicates an existing captain registry."); return; }
-
-            drivers.push({
-                name: document.getElementById('dName').value.trim(),
-                contact: document.getElementById('dContact').value.trim(),
-                license: lic, category: document.getElementById('dCat').value,
-                expiry: document.getElementById('dExpiry').value,
-                score: parseInt(document.getElementById('dScore').value) || 100,
-                status: "Available"
-            });
-            logEvent(`Operator registry set up for ${document.getElementById('dName').value}`);
-            closeDriverModal(); renderAll();
+        window.onload = function() {
+            if (sessionActive) {
+                document.getElementById('loginOverlay').classList.add('hidden');
+                fetchOptimizeState(true);
+            } else {
+                triggerLogout();
+            }
         }
-
-        // Trip Manifest with complex 5-level validations
-        function openTripModal() {
-            const tv = document.getElementById('tVehicle'); tv.innerHTML = '';
-            // Rule: Filter out "In Shop" and "Retired" from drop pool
-            vehicles.filter(v => v.status === 'Available').forEach(v => tv.innerHTML += `<option value="${v.reg}">${v.reg} (Max: ${v.cap}kg)</option>`);
-
-            const td = document.getElementById('tDriver'); td.innerHTML = '';
-            // Rule: Filter out Suspended or Expired operators from trip pools
-            const today = new Date();
-            drivers.filter(d => d.status === 'Available' && new Date(d.expiry) >= today).forEach(d => td.innerHTML += `<option value="${d.license}">${d.name} (Score: ${d.score})</option>`);
-
-            if(!tv.innerHTML || !td.innerHTML) { alert("Operational Bottleneck: You do not have an Available vehicle AND a valid unexpired Driver to dispatch a trip."); return; }
-            document.getElementById('tripModal').classList.remove('hidden');
-        }
-
-        function saveTrip(e) {
-            e.preventDefault();
-            const vReg = document.getElementById('tVehicle').value;
-            const dLic = document.getElementById('tDriver').value;
-            const weight = parseInt(document.getElementById('tWeight').value);
-            const dist = parseInt(document.getElementById('tDist').value);
-
-            const vehicleObj = vehicles.find(v => v.reg === vReg);
-            const driverObj = drivers.find(d => d.license === dLic);
-
-            // Mandatory Business Validation: Weight Boundary Checking
-            if(weight > vehicleObj.cap) { alert(`Safety Alert: Cargo weight (${weight}kg) exceeds vehicle maximum threshold load limit (${vehicleObj.cap}kg).`); return; }
-
-            // Allocate Manifest Entry
-            trips.push({
-                source: document.getElementById('tSource').value.trim(),
-                dest: document.getElementById('tDest').value.trim(),
-                vehicle: vReg, driver: driverObj.name, driverLic: dLic,
-                weight: weight, dist: dist, stage: "Dispatched"
-            });
-
-            // Rule: Auto Transition states on execution lifecycle triggering
-            vehicleObj.status = "On Trip";
-            driverObj.status = "On Trip";
-
-            logEvent(`Dispatched Trip ${vReg} with driver ${driverObj.name} to route.`);
-            closeTripModal(); renderAll();
-        }
-
-        function completeTrip(index) {
-            const t = trips[index];
-            const vObj = vehicles.find(v => v.reg === t.vehicle);
-            const dObj = drivers.find(d => d.license === t.driverLic);
-
-            // Update stats
-            vObj.odo += t.dist;
-            vObj.revenue += (t.dist * 45); // Standard fake earnings calculator per kilometer
-
-            // Rule: Restore availability flags
-            vObj.status = "Available";
-            if(dObj) dObj.status = "Available";
-            t.stage = "Completed";
-
-            logEvent(`Completed Freight Delivery on vehicle ${t.vehicle}. Logistics logs saved.`);
-            renderAll();
-        }
-
-        function cancelTrip(index) {
-            const t = trips[index];
-            const vObj = vehicles.find(v => v.reg === t.vehicle);
-            const dObj = drivers.find(d => d.license === t.driverLic);
-
-            vObj.status = "Available";
-            if(dObj) dObj.status = "Available";
-            t.stage = "Cancelled";
-
-            logEvent(`Cancelled Active Trip dispatch context for vehicle ${t.vehicle}. Assets restored.`);
-            renderAll();
-        }
-
-        // Maintenance Isolations Workflow
-        function openMaintenanceModal() {
-            const mv = document.getElementById('mVehicle'); mv.innerHTML = '';
-            vehicles.filter(v => v.status !== 'In Shop').forEach(v => mv.innerHTML += `<option value="${v.reg}">${v.reg} - ${v.model}</option>`);
-            if(!mv.innerHTML) { alert("No vehicles available for shop ticketing."); return; }
-            document.getElementById('maintenanceModal').classList.remove('hidden');
-        }
-
-        function saveMaintenance(e) {
-            e.preventDefault();
-            const vReg = document.getElementById('mVehicle').value;
-            maintenanceLogs.push({ vehicle: vReg, desc: document.getElementById('mDesc').value.trim(), date: new Date().toLocaleDateString(), active: true });
-
-            // Rule: Forcing Asset Isolation to shop blockages
-            vehicles.find(v => v.reg === vReg).status = "In Shop";
-            logEvent(`Vehicle ${vReg} isolated to mechanical repair garage queue.`);
-            closeMaintenanceModal(); renderAll();
-        }
-
-        function closeMaintenance(index) {
-            const log = maintenanceLogs[index];
-            log.active = false;
-            vehicles.find(v => v.reg === log.vehicle).status = "Available";
-            logEvent(`Maintenance completed. Vehicle ${log.vehicle} restored to active dispatch queues.`);
-            renderAll();
-        }
-
-        function saveExpense(e) {
-            e.preventDefault();
-            const vReg = document.getElementById('expenseVehicle').value;
-            const amt = parseInt(document.getElementById('expenseAmount').value);
-            const liters = parseInt(document.getElementById('expenseFuelLiters').value) || 0;
-            const cat = document.getElementById('expenseCategory').value;
-
-            const vObj = vehicles.find(v => v.reg === vReg);
-            if(cat === 'Fuel') { vObj.fuelSpent += liters; } 
-            else if(cat === 'Maintenance') { vObj.maintSpent += amt; }
-            else { vObj.maintSpent += (amt * 0.5); } // General internal fractional overhead logs
-
-            logEvent(`Logged operational expense line of ₹${amt} under ${cat} for asset ${vReg}.`);
-            e.target.reset(); renderAll();
-        }
-
-        // Global Utility Helpers
-        function filterTable(inputId, tableId) {
-            let filter = document.getElementById(inputId).value.toLowerCase();
-            let rows = document.querySelectorAll(`#${tableId} tr`);
-            rows.forEach(row => row.style.display = row.innerText.toLowerCase().includes(filter) ? '' : 'none');
-        }
-
-        function deleteVehicle(i) { if(confirm("Remove asset?")) { vehicles.splice(i,1); renderAll(); } }
-        function deleteDriver(i) { if(confirm("Remove operator profile?")) { drivers.splice(i,1); renderAll(); } }
-
-        function closeModalVehicle() { document.getElementById('vehicleModal').classList.add('hidden'); }
-        function closeVehicleModal() { document.getElementById('vehicleModal').classList.add('hidden'); }
-        function openVehicleModal() { document.getElementById('vehicleModal').classList.remove('hidden'); }
-        function closeDriverModal() { document.getElementById('driverModal').classList.add('hidden'); }
-        function openDriverModal() { document.getElementById('driverModal').classList.remove('hidden'); }
-        function closeTripModal() { document.getElementById('tripModal').classList.add('hidden'); }
-        function closeMaintenanceModal() { document.getElementById('maintenanceModal').classList.add('hidden'); }
-
-        // Start Up Setup Run
-        renderAll();
     </script>
 </body>
 </html>
