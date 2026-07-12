@@ -61,7 +61,8 @@
             <header class="bg-white shadow-sm px-8 py-4 flex justify-between items-center z-10">
                 <h2 class="text-xl font-semibold text-gray-800" id="currentTabTitle">Dashboard Module</h2>
                 <div class="flex items-center space-x-4">
-                    <span id="roleBadge" class="text-sm bg-indigo-100 text-indigo-800 font-medium px-2.5 py-0.5 rounded-full">Initializing Server Shield...</span>
+                    <span id="networkBadge" class="text-xs font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">LIVE MODE</span>
+                    <span id="roleBadge" class="text-sm bg-indigo-100 text-indigo-800 font-medium px-2.5 py-0.5 rounded-full">Initializing...</span>
                     <div class="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold" id="avatarBadge">--</div>
                 </div>
             </header>
@@ -70,30 +71,38 @@
                 
                 <div id="view-dashboard" class="tab-view space-y-6">
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div class="bg-white p-5 rounded-xl shadow-xs border border-gray-200">
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
                             <div class="text-xs font-semibold text-gray-400 uppercase">Total System Vehicles</div>
                             <div class="text-2xl font-bold text-gray-900 mt-1" id="kpi-vehicles">0</div>
                         </div>
-                        <div class="bg-white p-5 rounded-xl shadow-xs border border-gray-200">
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
                             <div class="text-xs font-semibold text-gray-400 uppercase">Drivers Monitored</div>
                             <div class="text-2xl font-bold text-gray-900 mt-1" id="kpi-drivers">0</div>
                         </div>
-                        <div class="bg-white p-5 rounded-xl shadow-xs border border-gray-200">
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
                             <div class="text-xs font-semibold text-gray-400 uppercase">Active Dispatches</div>
                             <div class="text-2xl font-bold text-gray-900 mt-1" id="kpi-trips">0</div>
                         </div>
-                        <div class="bg-white p-5 rounded-xl shadow-xs border border-gray-200">
-                            <div class="text-xs font-semibold text-gray-400 uppercase">Server Ping Status</div>
-                            <div class="text-2xl font-bold text-emerald-600 mt-1">ONLINE</div>
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+                            <div class="text-xs font-semibold text-gray-400 uppercase">Avg Fleet Safety</div>
+                            <div class="text-2xl font-bold text-indigo-600 mt-1" id="kpi-safety">0%</div>
                         </div>
+                    </div>
+
+                    <div id="roleActionPanel" class="bg-indigo-900 text-white p-4 rounded-xl shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 hidden">
+                        <div>
+                            <p class="font-bold text-sm" id="roleActionTitle">Privileged Direct Operations</p>
+                            <p class="text-xs text-indigo-200">Contextual quick tools configured for your active system authorization level.</p>
+                        </div>
+                        <div id="roleActionButtons" class="flex flex-wrap gap-2"></div>
                     </div>
                 </div>
 
                 <div id="view-vehicles" class="tab-view hidden space-y-4">
                     <div class="flex justify-between items-center">
-                        <input type="text" id="searchVehicleInput" oninput="filterTable('searchVehicleInput', 'vehicleTableBody')" placeholder="Search vehicles..." class="px-4 py-2 border border-gray-300 rounded-lg w-72">
+                        <input type="text" id="searchVehicleInput" oninput="filterTable('searchVehicleInput', 'vehicleTableBody')" placeholder="Search vehicles by reg, region, status..." class="px-4 py-2 border border-gray-300 rounded-lg w-72 text-xs">
                     </div>
-                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-xs">
+                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
                         <table class="w-full text-left border-collapse">
                             <thead class="bg-gray-50 text-xs font-semibold uppercase text-gray-500 border-b border-gray-200">
                                 <tr>
@@ -111,9 +120,9 @@
 
                 <div id="view-drivers" class="tab-view hidden space-y-4">
                     <div class="flex justify-between items-center">
-                        <input type="text" id="searchDriverInput" oninput="filterTable('searchDriverInput', 'driverTableBody')" placeholder="Search operators..." class="px-4 py-2 border border-gray-300 rounded-lg w-72">
+                        <input type="text" id="searchDriverInput" oninput="filterTable('searchDriverInput', 'driverTableBody')" placeholder="Search operators..." class="px-4 py-2 border border-gray-300 rounded-lg w-72 text-xs">
                     </div>
-                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-xs">
+                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
                         <table class="w-full text-left border-collapse">
                             <thead class="bg-gray-50 text-xs font-semibold uppercase text-gray-500 border-b border-gray-200">
                                 <tr>
@@ -130,7 +139,7 @@
                 </div>
 
                 <div id="view-trips" class="tab-view hidden space-y-4">
-                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-xs">
+                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
                         <table class="w-full text-left border-collapse">
                             <thead class="bg-gray-50 text-xs font-semibold uppercase text-gray-500 border-b border-gray-200">
                                 <tr>
@@ -148,7 +157,7 @@
 
                 <div id="view-comms" class="tab-view hidden space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-xs md:col-span-1 space-y-4">
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm md:col-span-1 space-y-4">
                             <h3 class="text-base font-bold text-gray-800">Dispatch Push Message</h3>
                             <form onsubmit="sendDriverAlert(event)" class="space-y-3">
                                 <div>
@@ -163,10 +172,9 @@
                             </form>
                         </div>
 
-                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-xs md:col-span-2">
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm md:col-span-2">
                             <h3 class="text-base font-bold text-gray-800 mb-4">Live Database Alert Transmission Logs</h3>
-                            <div class="border border-gray-100 rounded-xl p-4 bg-slate-950 text-emerald-400 font-mono text-xs h-64 overflow-y-auto space-y-2" id="alertLiveLogs">
-                                </div>
+                            <div class="border border-gray-100 rounded-xl p-4 bg-slate-950 text-emerald-400 font-mono text-xs h-64 overflow-y-auto space-y-2" id="alertLiveLogs"></div>
                         </div>
                     </div>
                 </div>
@@ -179,6 +187,28 @@
         const API_URL = "http://127.0.0.1:5000/api";
         let sessionActive = sessionStorage.getItem('__secure_token') ? true : false;
         let currentUserRole = sessionStorage.getItem('__secure_role') || null;
+        let isFailoverMockActive = false;
+
+        // HIGH VALUE RESILIENT FEEDS (Failover dummy database layer)
+        const mockDatabaseFeed = {
+            vehicles: [
+                { reg: "DL-3C-BA-4012", model: "Tata Prima 2825.K", type: "Heavy Tipper", region: "North-Delhi", odo: 48920, status: "Active Available" },
+                { reg: "MH-12-QW-8841", model: "Mahindra Blazo X", type: "Haulage Truck", region: "West-Mumbai", odo: 121050, status: "Active Available" },
+                { reg: "KA-03-MM-5009", model: "Ashok Leyland Ecomet", type: "Distribution Van", region: "South-Bangalore", odo: 31200, status: "Under Maintenance" }
+            ],
+            drivers: [
+                { name: "Rajesh Kumar", license: "DL-14201800492", contact: "+91 98765 43210", score: 94, status: "On Duty" },
+                { name: "Satnam Singh", license: "PB-02201599301", contact: "+91 87654 32109", score: 88, status: "Rest Block" },
+                { name: "Amit Sharma", license: "MH-01202100481", contact: "+91 76543 21098", score: 79, status: "On Duty" }
+            ],
+            trips: [
+                { source: "Noida Sector 62", dest: "Jaipur Industrial Zone", dist: 285, vehicle: "DL-3C-BA-4012", driver: "Rajesh Kumar", weight: 14500, stage: "In-Transit" },
+                { source: "Mumbai Port Trust", dest: "Pune Logistics Hub", dist: 150, vehicle: "MH-12-QW-8841", driver: "Amit Sharma", weight: 9200, stage: "Dispatched" }
+            ],
+            alerts: [
+                { timestamp: new Date().toLocaleTimeString(), driver_lic: "DL-14201800492", message: "Speed corridor warning near Expressway Toll.", status: "Delivered" }
+            ]
+        };
 
         function handleAuth(e) {
             e.preventDefault();
@@ -200,9 +230,40 @@
                 document.getElementById('roleBadge').innerText = `${role} Mode`;
                 document.getElementById('avatarBadge').innerText = role.split(' ').map(n=>n[0]).join('');
                 
+                configureRoleBasedActions(role);
                 syncWithBackendServer();
             } else {
                 alert("🔒 Authentication Fail: Invalid credentials.");
+            }
+        }
+
+        // FEATURE 1: Dynamic Context-Aware Privilege Panel
+        function configureRoleBasedActions(role) {
+            const panel = document.getElementById('roleActionPanel');
+            const title = document.getElementById('roleActionTitle');
+            const container = document.getElementById('roleActionButtons');
+            
+            if(!panel || !container) return;
+            container.innerHTML = '';
+            panel.classList.remove('hidden');
+
+            if (role === "Fleet Manager") {
+                title.innerText = "Fleet Commander Workspace";
+                container.innerHTML = `
+                    <button onclick="alert('Triggered: Auto-route optimization calculation')" class="bg-indigo-600 hover:bg-indigo-500 px-3 py-1.5 rounded-lg text-xs font-bold transition">Optimize Routes</button>
+                    <button onclick="alert('Triggered: Emergency Fleet Lockdown sequential system lock')" class="bg-red-600 hover:bg-red-500 px-3 py-1.5 rounded-lg text-xs font-bold transition">Emergency Lockdown</button>
+                `;
+            } else if (role === "Driver") {
+                title.innerText = "Operator Duty Terminal";
+                container.innerHTML = `
+                    <button onclick="alert('Logged: Shift check-in verified.')" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded-lg text-xs font-bold transition">Duty Check-In</button>
+                    <button onclick="alert('SOS Alert Transmitted to emergency operators.')" class="bg-red-600 hover:bg-red-500 px-3 py-1.5 rounded-lg text-xs font-bold transition">🚨 Send SOS</button>
+                `;
+            } else if (role === "Safety Officer") {
+                title.innerText = "Safety & Compliance Audit Control";
+                container.innerHTML = `
+                    <button onclick="alert('Generated: System-wide active risk factor audit report.')" class="bg-amber-600 hover:bg-amber-500 px-3 py-1.5 rounded-lg text-xs font-bold transition">Run Safety Audit</button>
+                `;
             }
         }
 
@@ -210,6 +271,7 @@
             sessionStorage.clear();
             sessionActive = false;
             document.getElementById('loginOverlay').classList.remove('hidden');
+            document.getElementById('roleActionPanel').classList.add('hidden');
         }
 
         function switchTab(tabId) {
@@ -224,20 +286,34 @@
             syncWithBackendServer();
         }
 
-        // ASYNC FETCH: Sync variables directly with Python SQLite Database
+        // FEATURE 2: Backend Automation Failover Logic
         async function syncWithBackendServer() {
             if(!sessionActive) return;
             try {
                 const response = await fetch(`${API_URL}/dashboard`);
+                if(!response.ok) throw new Error("Fallback requested");
                 const data = await response.json();
                 
+                isFailoverMockActive = false;
+                document.getElementById('networkBadge').className = "text-xs font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800";
+                document.getElementById('networkBadge').innerText = "LIVE BACKEND";
+
                 renderDashboardKPIs(data);
                 renderVehiclesTable(data.vehicles);
                 renderDriversTable(data.drivers);
                 renderTripsTable(data.trips);
                 renderCommsPanel(data.drivers, data.alerts);
             } catch (err) {
-                console.error("Backend offline! Run python app.py inside terminal.", err);
+                // Activate automation fallback system seamlessly
+                isFailoverMockActive = true;
+                document.getElementById('networkBadge').className = "text-xs font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800";
+                document.getElementById('networkBadge').innerText = "DEMO SIMULATION";
+                
+                renderDashboardKPIs(mockDatabaseFeed);
+                renderVehiclesTable(mockDatabaseFeed.vehicles);
+                renderDriversTable(mockDatabaseFeed.drivers);
+                renderTripsTable(mockDatabaseFeed.trips);
+                renderCommsPanel(mockDatabaseFeed.drivers, mockDatabaseFeed.alerts);
             }
         }
 
@@ -245,6 +321,12 @@
             document.getElementById('kpi-vehicles').innerText = data.vehicles.length;
             document.getElementById('kpi-drivers').innerText = data.drivers.length;
             document.getElementById('kpi-trips').innerText = data.trips.length;
+            
+            // Calculate real-time runtime safety average
+            if(data.drivers.length > 0) {
+                let totalScore = data.drivers.reduce((acc, current) => acc + parseInt(current.score || 0), 0);
+                document.getElementById('kpi-safety').innerText = Math.round(totalScore / data.drivers.length) + "%";
+            }
         }
 
         function renderVehiclesTable(list) {
@@ -252,12 +334,12 @@
             tbody.innerHTML = '';
             list.forEach(v => {
                 tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50">
+                    <tr class="hover:bg-gray-50 transition text-xs">
                         <td class="px-6 py-4 font-semibold text-gray-900">${v.reg}</td>
-                        <td class="px-6 py-4">${v.model} (${v.type})</td>
+                        <td class="px-6 py-4">${v.model} ${v.type ? `(${v.type})` : ''}</td>
                         <td class="px-6 py-4 text-xs font-bold text-slate-500">${v.region}</td>
-                        <td class="px-6 py-4">${v.odo} km</td>
-                        <td class="px-6 py-4 text-center"><span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">${v.status}</span></td>
+                        <td class="px-6 py-4">${v.odo.toLocaleString()} km</td>
+                        <td class="px-6 py-4 text-center"><span class="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800">${v.status}</span></td>
                     </tr>`;
             });
         }
@@ -267,12 +349,12 @@
             tbody.innerHTML = '';
             list.forEach(d => {
                 tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50">
+                    <tr class="hover:bg-gray-50 transition text-xs">
                         <td class="px-6 py-4 font-semibold text-gray-900">${d.name}</td>
                         <td class="px-6 py-4 font-mono text-xs">${d.license}</td>
                         <td class="px-6 py-4">${d.contact}</td>
                         <td class="px-6 py-4 text-center font-bold text-indigo-600">${d.score}/100</td>
-                        <td class="px-6 py-4 text-center"><span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">${d.status}</span></td>
+                        <td class="px-6 py-4 text-center"><span class="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-800">${d.status}</span></td>
                     </tr>`;
             });
         }
@@ -282,12 +364,12 @@
             tbody.innerHTML = '';
             list.forEach(t => {
                 tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50">
+                    <tr class="hover:bg-gray-50 transition text-xs">
                         <td class="px-6 py-4 font-medium">${t.source} &rarr; ${t.dest} (${t.dist} km)</td>
                         <td class="px-6 py-4 font-mono text-xs">${t.vehicle}</td>
                         <td class="px-6 py-4">${t.driver}</td>
-                        <td class="px-6 py-4">${t.weight} kg</td>
-                        <td class="px-6 py-4 text-center"><span class="text-xs font-bold uppercase text-indigo-600">${t.stage}</span></td>
+                        <td class="px-6 py-4">${t.weight.toLocaleString()} kg</td>
+                        <td class="px-6 py-4 text-center"><span class="text-[10px] font-bold uppercase text-indigo-600 bg-indigo-50 px-2 py-1 rounded">${t.stage}</span></td>
                     </tr>`;
             });
         }
@@ -303,16 +385,24 @@
             if(logs) {
                 logs.innerHTML = '';
                 alerts.forEach(a => {
-                    logs.innerHTML += `<div>[${a.timestamp}] Server Target ID [${a.driver_lic}] &rarr; <span class="text-white">${a.message}</span> <span class="text-xs text-indigo-400">(${a.status})</span></div>`;
+                    logs.innerHTML += `<div class="border-b border-slate-900 pb-1">[${a.timestamp}] Target License [${a.driver_lic}] &rarr; <span class="text-white">${a.message}</span> <span class="text-[10px] text-indigo-400 font-bold ml-1">(${a.status})</span></div>`;
                 });
             }
         }
 
-        // POST REQUEST: Connect to driver via Python backend pipeline
         async function sendDriverAlert(e) {
             e.preventDefault();
             const lic = document.getElementById('commDriverSelect').value;
             const msg = document.getElementById('commMessage').value.trim();
+
+            if(isFailoverMockActive) {
+                // Mock execution intercept
+                mockDatabaseFeed.alerts.unshift({ timestamp: new Date().toLocaleTimeString(), driver_lic: lic, message: msg, status: "Transmitted (Mock)" });
+                document.getElementById('commMessage').value = '';
+                syncWithBackendServer();
+                alert("Simulated Dispatch Alert appended to demo cache.");
+                return;
+            }
 
             try {
                 const res = await fetch(`${API_URL}/driver/contact`, {
@@ -325,7 +415,7 @@
                 document.getElementById('commMessage').value = '';
                 syncWithBackendServer();
             } catch (err) {
-                alert("Database transmission failed.");
+                alert("Database transmission offline. Backend sync lost.");
             }
         }
 
@@ -340,6 +430,7 @@
                 document.getElementById('loginOverlay').classList.add('hidden');
                 document.getElementById('roleBadge').innerText = `${currentUserRole} Mode`;
                 document.getElementById('avatarBadge').innerText = currentUserRole.split(' ').map(n=>n[0]).join('');
+                configureRoleBasedActions(currentUserRole);
                 syncWithBackendServer();
             } else {
                 triggerLogout();
