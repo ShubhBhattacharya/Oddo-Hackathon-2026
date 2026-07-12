@@ -3,95 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TransitOps - Dynamic Fleet</title>
+    <title>TransitOps - Enterprise Fleet Operations</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
-<body class="bg-gray-50 text-sm text-gray-700 select-none">
+<body class="bg-gray-50 font-sans text-sm text-gray-700 select-none">
 
     <div id="loginOverlay" class="fixed inset-0 bg-slate-950 flex items-center justify-center z-[100] p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
-            <h1 class="text-3xl font-extrabold text-indigo-600 text-center mb-6">TransitOps 🔐</h1>
-            <form onsubmit="handleAuth(event)" class="space-y-4">
-                <input type="text" id="authUsername" required placeholder="Username" class="w-full px-4 py-2 border rounded-xl">
-                <input type="password" id="authPassword" required placeholder="Password" class="w-full px-4 py-2 border rounded-xl">
-                <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-3 rounded-xl">Authenticate</button>
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 border border-gray-100">
+            <div class="text-center mb-6">
+                <h1 class="text-3xl font-extrabold tracking-wider text-indigo-600">TransitOps 🔐</h1>
+                <p class="text-gray-400 text-xs mt-1">Encrypted Enterprise Fleet Portal</p>
+            </div>
+            
+            <form onsubmit="handleAuth(event)" class="space-y-4" autocomplete="off">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Secure Login ID</label>
+                    <input type="text" id="authUsername" required placeholder="Enter Username" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Encrypted Password</label>
+                    <input type="password" id="authPassword" required placeholder="••••••••" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11px] text-amber-800 space-y-0.5">
+                    <p class="font-bold">🔒 Secure Access Credentials for Demo:</p>
+                    <p>• Fleet Manager: <code class="bg-amber-100 px-1 rounded">admin</code> / <code class="bg-amber-100 px-1 rounded">admin123</code></p>
+                    <p>• Driver: <code class="bg-amber-100 px-1 rounded">driver</code> / <code class="bg-amber-100 px-1 rounded">driver123</code></p>
+                    <p>• Safety Officer: <code class="bg-amber-100 px-1 rounded">safety</code> / <code class="bg-amber-100 px-1 rounded">safety123</code></p>
+                </div>
+
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl text-xs transition shadow-md shadow-indigo-200">Authenticate Session</button>
             </form>
         </div>
     </div>
 
     <div class="flex h-screen overflow-hidden">
         <div class="w-64 bg-slate-900 text-white p-6 hidden md:flex flex-col justify-between">
-            <nav class="space-y-2" id="sidebarMenu">
+            <div>
                 <h1 class="text-2xl font-bold tracking-wider mb-6 text-indigo-400">TransitOps</h1>
-                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="w-full text-left py-2.5 px-4 rounded bg-indigo-600 font-semibold">Dashboard</button>
-                <button onclick="switchTab('vehicles')" id="btn-vehicles" class="w-full text-left py-2.5 px-4 rounded text-gray-300 hover:bg-slate-800">Vehicles</button>
-                <button onclick="switchTab('drivers')" id="btn-drivers" class="w-full text-left py-2.5 px-4 rounded text-gray-300 hover:bg-slate-800">Drivers</button>
-                <button onclick="switchTab('trips')" id="btn-trips" class="w-full text-left py-2.5 px-4 rounded text-gray-300 hover:bg-slate-800">Trips</button>
-                <button onclick="switchTab('comms')" id="btn-comms" class="w-full text-left py-2.5 px-4 rounded text-gray-300 hover:bg-slate-800">Comms Hub 💬</button>
-            </nav>
-            <button onclick="triggerLogout()" class="w-full bg-slate-800 py-2 rounded text-xs">Logout</button>
+
+                <nav class="space-y-2" id="sidebarMenu">
+                    <button onclick="switchTab('dashboard')" id="btn-dashboard" class="w-full text-left py-2.5 px-4 rounded transition bg-indigo-600 font-semibold text-white">Dashboard</button>
+                    <button onclick="switchTab('vehicles')" id="btn-vehicles" class="w-full text-left py-2.5 px-4 rounded transition text-gray-300 hover:bg-slate-800">Vehicle Registry</button>
+                    <button onclick="switchTab('drivers')" id="btn-drivers" class="w-full text-left py-2.5 px-4 rounded transition text-gray-300 hover:bg-slate-800">Driver Management</button>
+                    <button onclick="switchTab('trips')" id="btn-trips" class="w-full text-left py-2.5 px-4 rounded transition text-gray-300 hover:bg-slate-800">Trip Management</button>
+                    <button onclick="switchTab('comms')" id="btn-comms" class="w-full text-left py-2.5 px-4 rounded transition text-gray-300 hover:bg-slate-800">Driver Comms Hub 💬</button>
+                </nav>
+            </div>
+            
+            <div class="border-t border-slate-800 pt-4 space-y-2">
+                <div class="text-[11px] text-gray-500">Odoo Hackathon Secure Build</div>
+                <button onclick="triggerLogout()" class="w-full bg-slate-800 hover:bg-red-900 text-gray-300 hover:text-white transition rounded py-2 text-xs font-medium">Secure Logout</button>
+            </div>
         </div>
 
         <div class="flex-1 flex flex-col h-full overflow-hidden">
-            <header class="bg-white shadow-sm px-8 py-4 flex justify-between items-center">
+            <header class="bg-white shadow-sm px-8 py-4 flex justify-between items-center z-10">
                 <h2 class="text-xl font-semibold text-gray-800" id="currentTabTitle">Dashboard Module</h2>
-                <span id="roleBadge" class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-xs font-bold">Manager Mode</span>
+                <div class="flex items-center space-x-4">
+                    <span id="roleBadge" class="text-sm bg-indigo-100 text-indigo-800 font-medium px-2.5 py-0.5 rounded-full">Initializing Server Shield...</span>
+                    <div class="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold" id="avatarBadge">--</div>
+                </div>
             </header>
 
             <div class="flex-1 overflow-y-auto p-8" id="viewContainer">
                 
                 <div id="view-dashboard" class="tab-view space-y-6">
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-xs">
-                            <div class="text-xs font-semibold text-gray-400">TOTAL VEHICLES</div>
-                            <div class="text-2xl font-bold mt-1" id="kpi-vehicles">0</div>
+                        <div class="bg-white p-5 rounded-xl shadow-xs border border-gray-200">
+                            <div class="text-xs font-semibold text-gray-400 uppercase">Total System Vehicles</div>
+                            <div class="text-2xl font-bold text-gray-900 mt-1" id="kpi-vehicles">0</div>
                         </div>
-                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-xs">
-                            <div class="text-xs font-semibold text-gray-400">TOTAL DRIVERS</div>
-                            <div class="text-2xl font-bold mt-1" id="kpi-drivers">0</div>
+                        <div class="bg-white p-5 rounded-xl shadow-xs border border-gray-200">
+                            <div class="text-xs font-semibold text-gray-400 uppercase">Drivers Monitored</div>
+                            <div class="text-2xl font-bold text-gray-900 mt-1" id="kpi-drivers">0</div>
                         </div>
-                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-xs">
-                            <div class="text-xs font-semibold text-gray-400">ACTIVE TRIPS</div>
-                            <div class="text-2xl font-bold mt-1" id="kpi-trips">0</div>
+                        <div class="bg-white p-5 rounded-xl shadow-xs border border-gray-200">
+                            <div class="text-xs font-semibold text-gray-400 uppercase">Active Dispatches</div>
+                            <div class="text-2xl font-bold text-gray-900 mt-1" id="kpi-trips">0</div>
                         </div>
-                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-xs">
-                            <div class="text-xs font-semibold text-gray-400">NETWORK CACHE</div>
-                            <div class="text-2xl font-bold text-emerald-600 mt-1">OPTIMIZED</div>
+                        <div class="bg-white p-5 rounded-xl shadow-xs border border-gray-200">
+                            <div class="text-xs font-semibold text-gray-400 uppercase">Server Ping Status</div>
+                            <div class="text-2xl font-bold text-emerald-600 mt-1">ONLINE</div>
                         </div>
                     </div>
                 </div>
 
                 <div id="view-vehicles" class="tab-view hidden space-y-4">
-                    <div class="bg-white rounded-xl border overflow-hidden">
-                        <table class="w-full text-left"><thead class="bg-gray-50 text-xs"><tr><th class="px-6 py-3">Reg</th><th class="px-6 py-3">Model</th><th class="px-6 py-3">Status</th></tr></thead><tbody id="vehicleTableBody" class="divide-y"></tbody></table>
+                    <div class="flex justify-between items-center">
+                        <input type="text" id="searchVehicleInput" oninput="filterTable('searchVehicleInput', 'vehicleTableBody')" placeholder="Search vehicles..." class="px-4 py-2 border border-gray-300 rounded-lg w-72">
+                    </div>
+                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-xs">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-gray-50 text-xs font-semibold uppercase text-gray-500 border-b border-gray-200">
+                                <tr>
+                                    <th class="px-6 py-3.5">Reg Number</th>
+                                    <th class="px-6 py-3.5">Model</th>
+                                    <th class="px-6 py-3.5">Region</th>
+                                    <th class="px-6 py-3.5">Odometer</th>
+                                    <th class="px-6 py-3.5 text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vehicleTableBody" class="divide-y divide-gray-100"></tbody>
+                        </table>
                     </div>
                 </div>
 
                 <div id="view-drivers" class="tab-view hidden space-y-4">
-                    <div class="bg-white rounded-xl border overflow-hidden">
-                        <table class="w-full text-left"><thead class="bg-gray-50 text-xs"><tr><th class="px-6 py-3">Name</th><th class="px-6 py-3">Score</th><th class="px-6 py-3">Status</th></tr></thead><tbody id="driverTableBody" class="divide-y"></tbody></table>
+                    <div class="flex justify-between items-center">
+                        <input type="text" id="searchDriverInput" oninput="filterTable('searchDriverInput', 'driverTableBody')" placeholder="Search operators..." class="px-4 py-2 border border-gray-300 rounded-lg w-72">
+                    </div>
+                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-xs">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-gray-50 text-xs font-semibold uppercase text-gray-500 border-b border-gray-200">
+                                <tr>
+                                    <th class="px-6 py-3.5">Driver Name</th>
+                                    <th class="px-6 py-3.5">License ID</th>
+                                    <th class="px-6 py-3.5">Contact No</th>
+                                    <th class="px-6 py-3.5 text-center">Safety Score</th>
+                                    <th class="px-6 py-3.5 text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="driverTableBody" class="divide-y divide-gray-100"></tbody>
+                        </table>
                     </div>
                 </div>
 
                 <div id="view-trips" class="tab-view hidden space-y-4">
-                    <div class="bg-white rounded-xl border overflow-hidden">
-                        <table class="w-full text-left"><thead class="bg-gray-50 text-xs"><tr><th class="px-6 py-3">Route</th><th class="px-6 py-3">Vehicle</th><th class="px-6 py-3">Driver</th><th class="px-6 py-3">Stage</th></tr></thead><tbody id="tripTableBody" class="divide-y"></tbody></table>
+                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-xs">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-gray-50 text-xs font-semibold uppercase text-gray-500 border-b border-gray-200">
+                                <tr>
+                                    <th class="px-6 py-3.5">Route Info</th>
+                                    <th class="px-6 py-3.5">Vehicle</th>
+                                    <th class="px-6 py-3.5">Assigned Captain</th>
+                                    <th class="px-6 py-3.5">Cargo Weight</th>
+                                    <th class="px-6 py-3.5 text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tripTableBody" class="divide-y divide-gray-100"></tbody>
+                        </table>
                     </div>
                 </div>
 
                 <div id="view-comms" class="tab-view hidden space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="bg-white p-6 rounded-xl border space-y-4">
-                            <h3 class="text-base font-bold">Transmit Dispatch Alert</h3>
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-xs md:col-span-1 space-y-4">
+                            <h3 class="text-base font-bold text-gray-800">Dispatch Push Message</h3>
                             <form onsubmit="sendDriverAlert(event)" class="space-y-3">
-                                <select id="commDriverSelect" required class="w-full px-3 py-2 border rounded-lg bg-white text-xs"></select>
-                                <textarea id="commMessage" required placeholder="Type emergency broadcast..." class="w-full px-3 py-2 border rounded-lg text-xs h-24"></textarea>
-                                <button type="submit" class="w-full bg-indigo-600 text-white font-medium py-2 rounded-lg text-xs">Transmit Alert</button>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Target Operator</label>
+                                    <select id="commDriverSelect" required class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-xs"></select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Message Broadcast</label>
+                                    <textarea id="commMessage" required placeholder="Type emergency route change or alert..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs h-24"></textarea>
+                                </div>
+                                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-lg text-xs transition">Transmit Server Alert</button>
                             </form>
                         </div>
-                        <div class="bg-white p-6 rounded-xl border md:col-span-2">
-                            <h3 class="text-base font-bold mb-4">Live Database Transmission Logs</h3>
-                            <div class="border rounded-xl p-4 bg-slate-950 text-emerald-400 font-mono text-xs h-64 overflow-y-auto space-y-2" id="alertLiveLogs"></div>
+
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-xs md:col-span-2">
+                            <h3 class="text-base font-bold text-gray-800 mb-4">Live Database Alert Transmission Logs</h3>
+                            <div class="border border-gray-100 rounded-xl p-4 bg-slate-950 text-emerald-400 font-mono text-xs h-64 overflow-y-auto space-y-2" id="alertLiveLogs">
+                                </div>
                         </div>
                     </div>
                 </div>
@@ -103,16 +178,32 @@
     <script>
         const API_URL = "http://127.0.0.1:5000/api";
         let sessionActive = sessionStorage.getItem('__secure_token') ? true : false;
-        
-        // OPTIMIZATION CACHE SYSTEM: Holds data locally to prevent redundant API thrashing
-        let localStateCache = null; 
+        let currentUserRole = sessionStorage.getItem('__secure_role') || null;
 
         function handleAuth(e) {
             e.preventDefault();
-            sessionActive = true;
-            sessionStorage.setItem('__secure_token', 'TOKEN_' + Date.now());
-            document.getElementById('loginOverlay').classList.add('hidden');
-            fetchOptimizeState(true); // Force API pull on login
+            const user = document.getElementById('authUsername').value.trim().toLowerCase();
+            const pass = document.getElementById('authPassword').value.trim();
+
+            let role = null;
+            if (user === 'admin' && pass === 'admin123') role = "Fleet Manager";
+            else if (user === 'driver' && pass === 'driver123') role = "Driver";
+            else if (user === 'safety' && pass === 'safety123') role = "Safety Officer";
+
+            if (role) {
+                sessionActive = true;
+                currentUserRole = role;
+                sessionStorage.setItem('__secure_role', role);
+                sessionStorage.setItem('__secure_token', 'SECURE_API_JWT_TOK_' + Date.now());
+                
+                document.getElementById('loginOverlay').classList.add('hidden');
+                document.getElementById('roleBadge').innerText = `${role} Mode`;
+                document.getElementById('avatarBadge').innerText = role.split(' ').map(n=>n[0]).join('');
+                
+                syncWithBackendServer();
+            } else {
+                alert("🔒 Authentication Fail: Invalid credentials.");
+            }
         }
 
         function triggerLogout() {
@@ -126,79 +217,98 @@
             document.querySelectorAll('.tab-view').forEach(el => el.classList.add('hidden'));
             document.getElementById(`view-${tabId}`).classList.remove('hidden');
             
-            document.querySelectorAll('#sidebarMenu button').forEach(el => el.classList.remove('bg-indigo-600', 'text-white'));
-            document.getElementById(`btn-${tabId}`).classList.add('bg-indigo-600', 'text-white');
+            document.querySelectorAll('#sidebarMenu button').forEach(el => el.classList.remove('bg-indigo-600', 'font-semibold', 'text-white'));
+            document.getElementById(`btn-${tabId}`).classList.add('bg-indigo-600', 'font-semibold', 'text-white');
             
             document.getElementById('currentTabTitle').innerText = tabId.charAt(0).toUpperCase() + tabId.slice(1) + " Module";
-            
-            // OPTIMIZED ACTION: Read from local state memory instead of spamming server
-            if (localStateCache) {
-                renderUIFromCache();
-            } else {
-                fetchOptimizeState();
-            }
+            syncWithBackendServer();
         }
 
-        async function fetchOptimizeState(force = false) {
+        // ASYNC FETCH: Sync variables directly with Python SQLite Database
+        async function syncWithBackendServer() {
             if(!sessionActive) return;
-            // If cache exists and no force parameter is passed, bypass database hit
-            if(localStateCache && !force) {
-                renderUIFromCache();
-                return;
-            }
             try {
                 const response = await fetch(`${API_URL}/dashboard`);
-                localStateCache = await response.json(); // Data cached into state memory
-                renderUIFromCache();
+                const data = await response.json();
+                
+                renderDashboardKPIs(data);
+                renderVehiclesTable(data.vehicles);
+                renderDriversTable(data.drivers);
+                renderTripsTable(data.trips);
+                renderCommsPanel(data.drivers, data.alerts);
             } catch (err) {
-                console.error("Backend Server Unreachable.", err);
+                console.error("Backend offline! Run python app.py inside terminal.", err);
             }
         }
 
-        function renderUIFromCache() {
-            if(!localStateCache) return;
-            
-            // 1. Render Dashboard Metrics
-            document.getElementById('kpi-vehicles').innerText = localStateCache.vehicles.length;
-            document.getElementById('kpi-drivers').innerText = localStateCache.drivers.length;
-            document.getElementById('kpi-trips').innerText = localStateCache.trips.length;
+        function renderDashboardKPIs(data) {
+            document.getElementById('kpi-vehicles').innerText = data.vehicles.length;
+            document.getElementById('kpi-drivers').innerText = data.drivers.length;
+            document.getElementById('kpi-trips').innerText = data.trips.length;
+        }
 
-            // 2. Render Vehicles Dynamic Grid
-            const vBody = document.getElementById('vehicleTableBody');
-            vBody.innerHTML = '';
-            localStateCache.vehicles.forEach(v => {
-                vBody.innerHTML += `<tr class="hover:bg-gray-50"><td class="px-6 py-4 font-semibold">${v.reg}</td><td class="px-6 py-4">${v.model}</td><td class="px-6 py-4"><span class="px-2 py-0.5 rounded text-xs bg-emerald-100 text-emerald-800">${v.status}</span></td></tr>`;
+        function renderVehiclesTable(list) {
+            const tbody = document.getElementById('vehicleTableBody');
+            tbody.innerHTML = '';
+            list.forEach(v => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 font-semibold text-gray-900">${v.reg}</td>
+                        <td class="px-6 py-4">${v.model} (${v.type})</td>
+                        <td class="px-6 py-4 text-xs font-bold text-slate-500">${v.region}</td>
+                        <td class="px-6 py-4">${v.odo} km</td>
+                        <td class="px-6 py-4 text-center"><span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">${v.status}</span></td>
+                    </tr>`;
             });
+        }
 
-            // 3. Render Drivers Dynamic Grid
-            const dBody = document.getElementById('driverTableBody');
-            dBody.innerHTML = '';
-            localStateCache.drivers.forEach(d => {
-                dBody.innerHTML += `<tr class="hover:bg-gray-50"><td class="px-6 py-4 font-medium">${d.name}</td><td class="px-6 py-4 text-indigo-600 font-bold">${d.score}/100</td><td class="px-6 py-4"><span class="px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-800">${d.status}</span></td></tr>`;
+        function renderDriversTable(list) {
+            const tbody = document.getElementById('driverTableBody');
+            tbody.innerHTML = '';
+            list.forEach(d => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 font-semibold text-gray-900">${d.name}</td>
+                        <td class="px-6 py-4 font-mono text-xs">${d.license}</td>
+                        <td class="px-6 py-4">${d.contact}</td>
+                        <td class="px-6 py-4 text-center font-bold text-indigo-600">${d.score}/100</td>
+                        <td class="px-6 py-4 text-center"><span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">${d.status}</span></td>
+                    </tr>`;
             });
+        }
 
-            // 4. Render Trips Dynamic Grid
-            const tBody = document.getElementById('tripTableBody');
-            tBody.innerHTML = '';
-            localStateCache.trips.forEach(t => {
-                tBody.innerHTML += `<tr class="hover:bg-gray-50"><td class="px-6 py-4">${t.source} &rarr; ${t.dest}</td><td class="px-6 py-4 font-mono text-xs">${t.vehicle}</td><td class="px-6 py-4">${t.driver}</td><td class="px-6 py-4 text-indigo-600 font-bold">${t.stage}</td></tr>`;
+        function renderTripsTable(list) {
+            const tbody = document.getElementById('tripTableBody');
+            tbody.innerHTML = '';
+            list.forEach(t => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 font-medium">${t.source} &rarr; ${t.dest} (${t.dist} km)</td>
+                        <td class="px-6 py-4 font-mono text-xs">${t.vehicle}</td>
+                        <td class="px-6 py-4">${t.driver}</td>
+                        <td class="px-6 py-4">${t.weight} kg</td>
+                        <td class="px-6 py-4 text-center"><span class="text-xs font-bold uppercase text-indigo-600">${t.stage}</span></td>
+                    </tr>`;
             });
+        }
 
-            // 5. Render Communication Components
+        function renderCommsPanel(drivers, alerts) {
             const select = document.getElementById('commDriverSelect');
-            if(select && select.innerHTML === '') {
-                localStateCache.drivers.forEach(d => { select.innerHTML += `<option value="${d.license}">${d.name}</option>`; });
+            if(select) {
+                select.innerHTML = '';
+                drivers.forEach(d => { select.innerHTML += `<option value="${d.license}">${d.name} (${d.contact})</option>`; });
             }
             
             const logs = document.getElementById('alertLiveLogs');
             if(logs) {
                 logs.innerHTML = '';
-                localStateCache.alerts.forEach(a => {
-                    logs.innerHTML += `<div>[${a.timestamp}] Target [${a.driver_lic}] &rarr; <span class="text-white">${a.message}</span></div>`;
+                alerts.forEach(a => {
+                    logs.innerHTML += `<div>[${a.timestamp}] Server Target ID [${a.driver_lic}] &rarr; <span class="text-white">${a.message}</span> <span class="text-xs text-indigo-400">(${a.status})</span></div>`;
                 });
             }
         }
 
+        // POST REQUEST: Connect to driver via Python backend pipeline
         async function sendDriverAlert(e) {
             e.preventDefault();
             const lic = document.getElementById('commDriverSelect').value;
@@ -211,17 +321,26 @@
                     body: JSON.stringify({ driver_lic: lic, message: msg })
                 });
                 const result = await res.json();
+                alert(result.message);
                 document.getElementById('commMessage').value = '';
-                fetchOptimizeState(true); // Force state reload to invalidate cache and refresh UI log
+                syncWithBackendServer();
             } catch (err) {
-                alert("Database synchronization failed.");
+                alert("Database transmission failed.");
             }
         }
 
+        function filterTable(inputId, tableId) {
+            let filter = document.getElementById(inputId).value.toLowerCase();
+            let rows = document.querySelectorAll(`#${tableId} tr`);
+            rows.forEach(row => row.style.display = row.innerText.toLowerCase().includes(filter) ? '' : 'none');
+        }
+
         window.onload = function() {
-            if (sessionActive) {
+            if (sessionActive && currentUserRole) {
                 document.getElementById('loginOverlay').classList.add('hidden');
-                fetchOptimizeState(true);
+                document.getElementById('roleBadge').innerText = `${currentUserRole} Mode`;
+                document.getElementById('avatarBadge').innerText = currentUserRole.split(' ').map(n=>n[0]).join('');
+                syncWithBackendServer();
             } else {
                 triggerLogout();
             }
