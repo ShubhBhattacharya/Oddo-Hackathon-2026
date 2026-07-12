@@ -33,7 +33,7 @@ function PublicRoute({ children, redirectAuthenticated = false }: { children: Re
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
+      <Route path="/" element={<PublicRoute redirectAuthenticated={true}><LandingPage /></PublicRoute>} />
       <Route path="/login" element={<PublicRoute redirectAuthenticated={true}><Login /></PublicRoute>} />
       <Route path="/register" element={<PublicRoute redirectAuthenticated={true}><Register /></PublicRoute>} />
       <Route path="/forgot-password" element={<PublicRoute redirectAuthenticated={true}><ForgotPassword /></PublicRoute>} />

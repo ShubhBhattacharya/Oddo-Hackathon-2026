@@ -64,7 +64,7 @@ export default function LandingPage() {
             className="flex items-center gap-2"
             initial={{ x: -50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.3 }}
           >
             <div className="p-2 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl shadow-lg">
               <TruckIcon className="h-6 w-6 text-white" />
@@ -75,7 +75,7 @@ export default function LandingPage() {
             className="hidden md:flex items-center gap-8"
             initial={{ x: 50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
           >
             <a href="#features" className="text-slate-600 hover:text-blue-600 transition-colors font-medium">Features</a>
             <a href="#benefits" className="text-slate-600 hover:text-blue-600 transition-colors font-medium">Benefits</a>
@@ -95,7 +95,7 @@ export default function LandingPage() {
             className="space-y-8"
             initial={{ x: -100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.7 }}
+            transition={{ duration: 0.4 }}
           >
             <motion.div 
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 text-sm font-semibold"
@@ -140,7 +140,7 @@ export default function LandingPage() {
                     className="h-10 w-10 rounded-full border-2 border-white bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white text-xs font-bold shadow-lg"
                     initial={{ x: -20 * i, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.5 + i * 0.1 }}
+                    transition={{ duration: 0.3, delay: 0.2 + i * 0.05 }}
                   >
                     U{i}
                   </motion.div>
@@ -162,7 +162,7 @@ export default function LandingPage() {
             className="relative"
             initial={{ x: 100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.7, delay: 0.3 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
           >
             <div className="absolute -inset-8 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-[2.5rem] blur-3xl animate-pulse" />
             <div className="relative bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden">
@@ -187,7 +187,7 @@ export default function LandingPage() {
                 className="text-center"
                 initial={{ y: 50, opacity: 0 }}
                 whileInView={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
                 viewport={{ once: true }}
               >
                 <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">{stat.number}</div>
@@ -205,7 +205,7 @@ export default function LandingPage() {
             className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-slate-900 to-blue-900 bg-clip-text text-transparent"
             initial={{ y: 30, opacity: 0 }}
             whileInView={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.4 }}
             viewport={{ once: true }}
           >
             Everything You Need in One Platform
@@ -214,7 +214,7 @@ export default function LandingPage() {
             className="text-slate-600 text-lg max-w-2xl mx-auto"
             initial={{ y: 30, opacity: 0 }}
             whileInView={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
             viewport={{ once: true }}
           >
             Powerful features designed to simplify your daily operations and boost your bottom line
@@ -227,7 +227,7 @@ export default function LandingPage() {
               className="p-8 rounded-2xl border border-slate-200 bg-white hover:border-blue-300 hover:shadow-2xl transition-all duration-300"
               initial={{ y: 50, opacity: 0 }}
               whileInView={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
+              transition={{ duration: 0.3, delay: index * 0.05 }}
               viewport={{ once: true }}
               whileHover={{ y: -8, scale: 1.02 }}
             >
@@ -248,7 +248,7 @@ export default function LandingPage() {
             className="text-center mb-16"
             initial={{ y: 30, opacity: 0 }}
             whileInView={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.4 }}
             viewport={{ once: true }}
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-4 text-slate-900">What Our Customers Say</h2>
@@ -261,7 +261,7 @@ export default function LandingPage() {
                 initial={{ x: 50, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: -50, opacity: 0 }}
-                transition={{ duration: 0.4 }}
+                transition={{ duration: 0.3 }}
                 className="bg-white p-10 rounded-3xl border border-slate-200 shadow-2xl"
               >
                 <div className="flex items-center gap-2 mb-6">
@@ -320,7 +320,7 @@ export default function LandingPage() {
           className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-[2.5rem] p-10 md:p-16 text-center text-white shadow-2xl"
           initial={{ scale: 0.9, opacity: 0 }}
           whileInView={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.4 }}
           viewport={{ once: true }}
         >
           <h2 className="text-3xl md:text-5xl font-bold mb-6">Ready to Transform Your Fleet Operations?</h2>
