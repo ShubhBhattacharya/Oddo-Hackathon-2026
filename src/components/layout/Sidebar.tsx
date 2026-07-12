@@ -96,12 +96,13 @@ export default function Sidebar({ onClose }: SidebarProps) {
           <NavLink
             key={item.title}
             to={item.to}
+            end={item.to === "/dashboard"}
             onClick={onClose}
             className={({ isActive }) =>
               cn(
-                "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
+                "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200",
                 isActive
-                  ? "bg-primary text-primary-foreground shadow-md"
+                  ? "bg-indigo-50 text-indigo-700"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )
             }

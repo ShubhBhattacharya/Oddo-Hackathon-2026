@@ -1,742 +1,873 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TransitOps - Enterprise Fleet Operations</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TransitOps - Fleet Management</title>
 
-    <!-- ===================== NEW: Quick Message Templates styles ===================== -->
-    <style>
-        /* Badge above template grid */
-        .qmt-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: linear-gradient(135deg, #eef2ff, #e0e7ff);
-            color: #4338ca;
-            border: 1px solid #c7d2fe;
-            font-size: 10.5px;
-            font-weight: 700;
-            letter-spacing: 0.03em;
-            padding: 4px 10px;
-            border-radius: 999px;
-            margin-bottom: 6px;
-        }
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 
-        .qmt-hint {
-            font-size: 11px;
-            color: #8b90a6;
-            margin-bottom: 10px;
-        }
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-        /* Template button grid */
-        .qmt-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 8px;
-            margin-bottom: 18px;
-        }
+  <style>
+    #tripMap {
+      height: 480px;
+      width: 100%;
+    }
 
-        @media (min-width: 480px) {
-            .qmt-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-        }
-
-        /* Individual template button */
-        .qmt-btn {
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            width: 100%;
-            text-align: left;
-            padding: 9px 10px;
-            border-radius: 12px;
-            border: 1px solid rgba(99, 102, 241, 0.18);
-            background: linear-gradient(135deg, rgba(238, 242, 255, 0.9), rgba(224, 231, 255, 0.6));
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-            color: #3730a3;
-            font-size: 11px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 1px 4px rgba(99, 102, 241, 0.08);
-            transition: transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1),
-                        box-shadow 220ms ease,
-                        background 220ms ease,
-                        border-color 220ms ease,
-                        color 220ms ease;
-        }
-
-        .qmt-btn .qmt-icon {
-            font-size: 15px;
-            line-height: 1;
-            flex-shrink: 0;
-        }
-
-        .qmt-btn:hover {
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.28);
-            border-color: rgba(99, 102, 241, 0.4);
-        }
-
-        .qmt-btn:active {
-            transform: translateY(-1px) scale(0.97);
-        }
-
-        /* Selected / active state glow */
-        .qmt-btn.qmt-selected {
-            background: linear-gradient(135deg, #6366f1, #4f46e5);
-            color: #ffffff;
-            border-color: transparent;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25), 0 8px 22px rgba(99, 102, 241, 0.45);
-            animation: qmtSelectedPulse 1.8s ease-in-out infinite;
-        }
-
-        @keyframes qmtSelectedPulse {
-            0%, 100% { box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25), 0 8px 22px rgba(99, 102, 241, 0.45); }
-            50% { box-shadow: 0 0 0 5px rgba(99, 102, 241, 0.15), 0 10px 26px rgba(99, 102, 241, 0.55); }
-        }
-
-        /* Ripple click effect */
-        .qmt-btn .qmt-ripple {
-            position: absolute;
-            border-radius: 50%;
-            transform: scale(0);
-            background: rgba(255, 255, 255, 0.55);
-            pointer-events: none;
-            animation: qmtRippleAnim 550ms ease-out forwards;
-        }
-
-        @keyframes qmtRippleAnim {
-            to {
-                transform: scale(3.2);
-                opacity: 0;
-            }
-        }
-
-        /* Textarea glow when template is being typed in */
-        .qmt-textarea-glow {
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.25), 0 4px 14px rgba(99, 102, 241, 0.25) !important;
-            border-color: #6366f1 !important;
-            transition: box-shadow 300ms ease, border-color 300ms ease;
-        }
-
-        /* Blinking caret shown while the typing animation runs */
-        .qmt-typing-caret {
-            display: inline-block;
-            width: 2px;
-            background: #6366f1;
-            margin-left: 1px;
-            animation: qmtCaretBlink 0.85s steps(1) infinite;
-        }
-
-        @keyframes qmtCaretBlink {
-            0%, 49% { opacity: 1; }
-            50%, 100% { opacity: 0; }
-        }
-
-        /* Toast notification */
-        #qmtToastContainer {
-            position: fixed;
-            top: 18px;
-            right: 18px;
-            z-index: 200;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            pointer-events: none;
-        }
-
-        .qmt-toast {
-            pointer-events: auto;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: linear-gradient(135deg, #111827, #1f2937);
-            color: #ffffff;
-            border: 1px solid rgba(99, 102, 241, 0.4);
-            padding: 10px 16px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(99, 102, 241, 0.15);
-            transform: translateX(120%);
-            opacity: 0;
-            animation: qmtToastIn 380ms cubic-bezier(0.16, 1, 0.3, 1) forwards,
-                       qmtToastOut 380ms cubic-bezier(0.7, 0, 1, 1) forwards 2.1s;
-        }
-
-        @keyframes qmtToastIn {
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        @keyframes qmtToastOut {
-            to { transform: translateX(120%); opacity: 0; }
-        }
-    </style>
-    <!-- =================== END NEW: Quick Message Templates styles =================== -->
+    .leaflet-container {
+      font-family: inherit;
+    }
+  </style>
 </head>
-<body class="bg-gray-50 font-sans text-sm text-gray-700 select-none">
 
-    <div id="loginOverlay" class="fixed inset-0 bg-slate-950 flex items-center justify-center z-[100] p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 border border-gray-100">
-            <div class="text-center mb-6">
-                <h1 class="text-3xl font-extrabold tracking-wider text-indigo-600">TransitOps 🔐</h1>
-                <p class="text-gray-400 text-xs mt-1">Encrypted Enterprise Fleet Portal</p>
-            </div>
-            
-            <form onsubmit="handleAuth(event)" class="space-y-4" autocomplete="off">
-                <div>
-                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Secure Login ID</label>
-                    <input type="text" id="authUsername" required placeholder="Enter Username" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Encrypted Password</label>
-                    <input type="password" id="authPassword" required placeholder="••••••••" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                
-                <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11px] text-amber-800 space-y-0.5">
-                    <p class="font-bold">🔒 Secure Access Credentials for Demo:</p>
-                    <p>• Fleet Manager: <code class="bg-amber-100 px-1 rounded">admin</code> / <code class="bg-amber-100 px-1 rounded">admin123</code></p>
-                    <p>• Driver: <code class="bg-amber-100 px-1 rounded">driver</code> / <code class="bg-amber-100 px-1 rounded">driver123</code></p>
-                    <p>• Safety Officer: <code class="bg-amber-100 px-1 rounded">safety</code> / <code class="bg-amber-100 px-1 rounded">safety123</code></p>
-                </div>
+<body class="bg-gray-50 font-sans text-sm text-gray-700">
 
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl text-xs transition shadow-md shadow-indigo-200">Authenticate Session</button>
-            </form>
-        </div>
+  <!-- Welcome Screen -->
+  <div
+    id="coverPage"
+    class="fixed inset-0 z-[200] flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 px-6 text-white"
+  >
+    <div class="max-w-4xl space-y-6 py-8 text-center">
+      <div class="inline-flex rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-indigo-400">
+        Fleet Operations Workspace
+      </div>
+
+      <h1 class="text-4xl font-black tracking-tight md:text-6xl">
+        TransitOps
+        <span class="bg-gradient-to-r from-indigo-400 to-emerald-400 bg-clip-text text-transparent">
+          Fleet Commander
+        </span>
+      </h1>
+
+      <p class="mx-auto max-w-2xl text-base text-slate-400 md:text-lg">
+        Fleet telemetry, GPS trip tracking, driver performance, route operations,
+        and an integrated AI chatbot.
+      </p>
+
+      <button
+        onclick="launchDashboard()"
+        class="cursor-pointer rounded-xl bg-indigo-600 px-8 py-4 text-xs font-bold uppercase tracking-wider hover:bg-indigo-500"
+      >
+        Launch Command Workspace
+      </button>
     </div>
+  </div>
 
-    <div class="flex h-screen overflow-hidden">
-        <div class="w-64 bg-slate-900 text-white p-6 hidden md:flex flex-col justify-between">
+  <div class="flex h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="hidden w-64 flex-col justify-between bg-slate-900 p-6 text-white md:flex">
+      <div>
+        <h1 class="mb-6 text-2xl font-bold tracking-wider text-indigo-400">
+          TransitOps
+        </h1>
+
+        <nav id="sidebarMenu" class="space-y-2">
+          <button
+            id="btn-dashboard"
+            onclick="switchTab('dashboard')"
+            class="w-full cursor-pointer rounded bg-indigo-600 px-4 py-2.5 text-left font-semibold"
+          >
+            Dashboard
+          </button>
+
+          <button
+            id="btn-vehicles"
+            onclick="switchTab('vehicles')"
+            class="w-full cursor-pointer rounded px-4 py-2.5 text-left text-gray-300 hover:bg-slate-800"
+          >
+            Vehicle Registry
+          </button>
+
+          <button
+            id="btn-drivers"
+            onclick="switchTab('drivers')"
+            class="w-full cursor-pointer rounded px-4 py-2.5 text-left text-gray-300 hover:bg-slate-800"
+          >
+            Driver Management
+          </button>
+
+          <button
+            id="btn-trips"
+            onclick="switchTab('trips')"
+            class="w-full cursor-pointer rounded px-4 py-2.5 text-left text-gray-300 hover:bg-slate-800"
+          >
+            Trip Management
+          </button>
+
+          <button
+            id="btn-comms"
+            onclick="switchTab('comms')"
+            class="w-full cursor-pointer rounded px-4 py-2.5 text-left text-gray-300 hover:bg-slate-800"
+          >
+            Driver Comms Hub
+          </button>
+        </nav>
+      </div>
+
+      <div class="border-t border-slate-800 pt-4">
+        <p class="mb-2 text-[11px] text-gray-500">Local Client Simulation Build</p>
+
+        <button
+          onclick="triggerLogout()"
+          class="w-full cursor-pointer rounded bg-slate-800 py-2 text-xs text-gray-400 hover:bg-red-950 hover:text-white"
+        >
+          Reset Session
+        </button>
+      </div>
+    </aside>
+
+    <main class="flex h-full flex-1 flex-col overflow-hidden">
+      <header class="z-10 flex items-center justify-between bg-white px-8 py-4 shadow-sm">
+        <h2 id="currentTabTitle" class="text-xl font-semibold text-gray-800">
+          Dashboard Module
+        </h2>
+
+        <div class="flex items-center space-x-4">
+          <span class="rounded bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800">
+            DEMO SIMULATION
+          </span>
+
+          <span class="rounded-full bg-indigo-100 px-2.5 py-0.5 text-sm font-medium text-indigo-800">
+            Fleet Manager Mode
+          </span>
+
+          <div class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-800 font-bold text-white">
+            FM
+          </div>
+        </div>
+      </header>
+
+      <div id="viewContainer" class="flex-1 overflow-y-auto p-8">
+
+        <!-- Dashboard -->
+        <section id="view-dashboard" class="tab-view space-y-6">
+          <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <div class="rounded-xl border border-gray-200 bg-white p-5">
+              <div class="text-xs font-semibold uppercase text-gray-400">Total System Vehicles</div>
+              <div id="kpi-vehicles" class="mt-1 text-2xl font-bold text-gray-900">0</div>
+            </div>
+
+            <div class="rounded-xl border border-gray-200 bg-white p-5">
+              <div class="text-xs font-semibold uppercase text-gray-400">Drivers Monitored</div>
+              <div id="kpi-drivers" class="mt-1 text-2xl font-bold text-gray-900">0</div>
+            </div>
+
+            <div class="rounded-xl border border-gray-200 bg-white p-5">
+              <div class="text-xs font-semibold uppercase text-gray-400">Active Dispatches</div>
+              <div id="kpi-trips" class="mt-1 text-2xl font-bold text-gray-900">0</div>
+            </div>
+
+            <div class="rounded-xl border border-gray-200 bg-white p-5">
+              <div class="text-xs font-semibold uppercase text-gray-400">Avg Fleet Safety</div>
+              <div id="kpi-safety" class="mt-1 text-2xl font-bold text-indigo-600">0%</div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between rounded-xl bg-slate-900 p-4 text-white">
             <div>
-                <h1 class="text-2xl font-bold tracking-wider mb-6 text-indigo-400">TransitOps</h1>
+              <p class="font-bold">Fleet Commander Workspace</p>
+              <p class="text-xs text-slate-400">
+                Live simulation tools for fleet operations.
+              </p>
+            </div>
 
-                <nav class="space-y-2" id="sidebarMenu">
-                    <button onclick="switchTab('dashboard')" id="btn-dashboard" class="w-full text-left py-2.5 px-4 rounded transition bg-indigo-600 font-semibold text-white">Dashboard</button>
-                    <button onclick="switchTab('vehicles')" id="btn-vehicles" class="w-full text-left py-2.5 px-4 rounded transition text-gray-300 hover:bg-slate-800">Vehicle Registry</button>
-                    <button onclick="switchTab('drivers')" id="btn-drivers" class="w-full text-left py-2.5 px-4 rounded transition text-gray-300 hover:bg-slate-800">Driver Management</button>
-                    <button onclick="switchTab('trips')" id="btn-trips" class="w-full text-left py-2.5 px-4 rounded transition text-gray-300 hover:bg-slate-800">Trip Management</button>
-                    <button onclick="switchTab('comms')" id="btn-comms" class="w-full text-left py-2.5 px-4 rounded transition text-gray-300 hover:bg-slate-800">Driver Comms Hub 💬</button>
-                </nav>
+            <div class="flex gap-2">
+              <button
+                onclick="alert('Route optimization started.')"
+                class="cursor-pointer rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold hover:bg-indigo-500"
+              >
+                Optimize Routes
+              </button>
+
+              <button
+                onclick="alert('Emergency Fleet Lockdown triggered.')"
+                class="cursor-pointer rounded-lg bg-red-600 px-3 py-1.5 text-xs font-bold hover:bg-red-500"
+              >
+                Emergency Lockdown
+              </button>
             </div>
-            
-            <div class="border-t border-slate-800 pt-4 space-y-2">
-                <div class="text-[11px] text-gray-500">Odoo Hackathon Secure Build</div>
-                <button onclick="triggerLogout()" class="w-full bg-slate-800 hover:bg-red-900 text-gray-300 hover:text-white transition rounded py-2 text-xs font-medium">Secure Logout</button>
+          </div>
+        </section>
+
+        <!-- Vehicle Registry -->
+        <section id="view-vehicles" class="tab-view hidden space-y-4">
+          <input
+            id="searchVehicleInput"
+            oninput="filterTable('searchVehicleInput', 'vehicleTableBody')"
+            type="text"
+            placeholder="Search vehicles..."
+            class="w-72 rounded-lg border border-gray-300 px-4 py-2 text-xs"
+          />
+
+          <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
+            <table class="w-full text-left">
+              <thead class="bg-gray-50 text-xs font-semibold uppercase text-gray-500">
+                <tr>
+                  <th class="px-6 py-3.5">Reg Number</th>
+                  <th class="px-6 py-3.5">Model</th>
+                  <th class="px-6 py-3.5">Region</th>
+                  <th class="px-6 py-3.5">Odometer</th>
+                  <th class="px-6 py-3.5 text-center">GPS</th>
+                </tr>
+              </thead>
+
+              <tbody id="vehicleTableBody" class="divide-y divide-gray-100"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Driver Management -->
+        <section id="view-drivers" class="tab-view hidden space-y-4">
+          <input
+            id="searchDriverInput"
+            oninput="filterTable('searchDriverInput', 'driverTableBody')"
+            type="text"
+            placeholder="Search fleet operators..."
+            class="w-72 rounded-lg border border-gray-300 px-4 py-2 text-xs"
+          />
+
+          <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
+            <table class="w-full text-left">
+              <thead class="bg-gray-50 text-xs font-semibold uppercase text-gray-500">
+                <tr>
+                  <th class="px-6 py-3.5">Driver Name</th>
+                  <th class="px-6 py-3.5">License ID</th>
+                  <th class="px-6 py-3.5">Contact No</th>
+                  <th class="px-6 py-3.5 text-center">Safety Score</th>
+                  <th class="px-6 py-3.5 text-center">Status</th>
+                </tr>
+              </thead>
+
+              <tbody id="driverTableBody" class="divide-y divide-gray-100"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Trip Management + Live GPS -->
+        <section id="view-trips" class="tab-view hidden space-y-5">
+          <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
+            <table class="w-full text-left">
+              <thead class="bg-gray-50 text-xs font-semibold uppercase text-gray-500">
+                <tr>
+                  <th class="px-6 py-3.5">Route Info</th>
+                  <th class="px-6 py-3.5">Vehicle</th>
+                  <th class="px-6 py-3.5">Assigned Captain</th>
+                  <th class="px-6 py-3.5">Cargo Weight</th>
+                  <th class="px-6 py-3.5 text-center">Status</th>
+                  <th class="px-6 py-3.5 text-center">Tracking</th>
+                </tr>
+              </thead>
+
+              <tbody id="tripTableBody" class="divide-y divide-gray-100"></tbody>
+            </table>
+          </div>
+
+          <div class="rounded-xl border border-gray-200 bg-white p-5">
+            <div class="mb-4 flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
+              <div>
+                <h3 class="text-lg font-bold text-gray-800">Live GPS Tracking</h3>
+                <p class="text-xs text-gray-500">
+                  Start multiple rides simultaneously and track each driver on OpenStreetMap.
+                </p>
+              </div>
+
+              <button
+                onclick="fitAllTrips()"
+                class="cursor-pointer rounded-lg border border-indigo-200 px-3 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50"
+              >
+                Fit All Trips
+              </button>
             </div>
+
+            <div id="tripMap" class="overflow-hidden rounded-xl border border-gray-200"></div>
+
+            <p class="mt-3 text-[11px] text-gray-400">
+              Map data © OpenStreetMap contributors
+            </p>
+          </div>
+        </section>
+
+        <!-- Communication -->
+        <section id="view-comms" class="tab-view hidden grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div class="space-y-4 rounded-xl border border-gray-200 bg-white p-6">
+            <h3 class="text-base font-bold">Dispatch Push Message</h3>
+
+            <form onsubmit="sendDriverAlert(event)" class="space-y-3">
+              <select
+                id="commDriverSelect"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs"
+              ></select>
+
+              <textarea
+                id="commMessage"
+                required
+                placeholder="Type route change logs or alert guidelines..."
+                class="h-24 w-full rounded-lg border border-gray-300 px-3 py-2 text-xs"
+              ></textarea>
+
+              <button class="w-full cursor-pointer rounded-lg bg-indigo-600 py-2 text-xs text-white hover:bg-indigo-700">
+                Transmit Logs
+              </button>
+            </form>
+          </div>
+
+          <div class="rounded-xl border border-gray-200 bg-white p-6 md:col-span-2">
+            <h3 class="mb-4 text-base font-bold">Live Alert Log Core</h3>
+
+            <div
+              id="alertLiveLogs"
+              class="h-64 overflow-y-auto rounded-xl border bg-slate-950 p-4 font-mono text-xs text-emerald-400"
+            ></div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- AI Chatbot -->
+  <div id="chatbotContainer" class="fixed bottom-6 right-6 z-[100] flex flex-col items-end">
+    <div
+      id="chatWindow"
+      class="mb-3 flex h-[440px] w-96 translate-y-4 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white opacity-0 shadow-2xl pointer-events-none transition-all duration-300"
+    >
+      <div class="flex items-center justify-between border-b border-slate-800 bg-slate-900 p-4 text-white">
+        <div>
+          <h3 class="text-xs font-bold uppercase text-indigo-400">
+            TransitOps Portal AI
+          </h3>
+          <p class="text-[10px] text-gray-400">Real-time Fleet Analytics</p>
         </div>
 
-        <div class="flex-1 flex flex-col h-full overflow-hidden">
-            <header class="bg-white shadow-sm px-8 py-4 flex justify-between items-center z-10">
-                <h2 class="text-xl font-semibold text-gray-800" id="currentTabTitle">Dashboard Module</h2>
-                <div class="flex items-center space-x-4">
-                    <span id="networkBadge" class="text-xs font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">LIVE MODE</span>
-                    <span id="roleBadge" class="text-sm bg-indigo-100 text-indigo-800 font-medium px-2.5 py-0.5 rounded-full">Initializing...</span>
-                    <div class="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold" id="avatarBadge">--</div>
-                </div>
-            </header>
+        <button onclick="toggleChat()" class="cursor-pointer text-lg text-gray-300 hover:text-white">
+          ×
+        </button>
+      </div>
 
-            <div class="flex-1 overflow-y-auto p-8" id="viewContainer">
-                
-                <div id="view-dashboard" class="tab-view space-y-6">
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
-                            <div class="text-xs font-semibold text-gray-400 uppercase">Total System Vehicles</div>
-                            <div class="text-2xl font-bold text-gray-900 mt-1" id="kpi-vehicles">0</div>
-                        </div>
-                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
-                            <div class="text-xs font-semibold text-gray-400 uppercase">Drivers Monitored</div>
-                            <div class="text-2xl font-bold text-gray-900 mt-1" id="kpi-drivers">0</div>
-                        </div>
-                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
-                            <div class="text-xs font-semibold text-gray-400 uppercase">Active Dispatches</div>
-                            <div class="text-2xl font-bold text-gray-900 mt-1" id="kpi-trips">0</div>
-                        </div>
-                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
-                            <div class="text-xs font-semibold text-gray-400 uppercase">Avg Fleet Safety</div>
-                            <div class="text-2xl font-bold text-indigo-600 mt-1" id="kpi-safety">0%</div>
-                        </div>
-                    </div>
+      <div class="flex flex-wrap gap-1.5 border-b border-gray-100 bg-gray-50 p-2">
+        <button onclick="injectChatMessage('Show dashboard summary')" class="cursor-pointer rounded border bg-white px-2 py-1 text-[10px]">
+          Stats
+        </button>
 
-                    <div id="roleActionPanel" class="bg-indigo-900 text-white p-4 rounded-xl shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 hidden">
-                        <div>
-                            <p class="font-bold text-sm" id="roleActionTitle">Privileged Direct Operations</p>
-                            <p class="text-xs text-indigo-200">Contextual quick tools configured for your active system authorization level.</p>
-                        </div>
-                        <div id="roleActionButtons" class="flex flex-wrap gap-2"></div>
-                    </div>
-                </div>
+        <button onclick="injectChatMessage('Show active trips')" class="cursor-pointer rounded border bg-white px-2 py-1 text-[10px]">
+          Trips
+        </button>
 
-                <div id="view-vehicles" class="tab-view hidden space-y-4">
-                    <div class="flex justify-between items-center">
-                        <input type="text" id="searchVehicleInput" oninput="filterTable('searchVehicleInput', 'vehicleTableBody')" placeholder="Search vehicles by reg, region, status..." class="px-4 py-2 border border-gray-300 rounded-lg w-72 text-xs">
-                    </div>
-                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                        <table class="w-full text-left border-collapse">
-                            <thead class="bg-gray-50 text-xs font-semibold uppercase text-gray-500 border-b border-gray-200">
-                                <tr>
-                                    <th class="px-6 py-3.5">Reg Number</th>
-                                    <th class="px-6 py-3.5">Model</th>
-                                    <th class="px-6 py-3.5">Region</th>
-                                    <th class="px-6 py-3.5">Odometer</th>
-                                    <th class="px-6 py-3.5 text-center">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="vehicleTableBody" class="divide-y divide-gray-100"></tbody>
-                        </table>
-                    </div>
-                </div>
+        <button onclick="injectChatMessage('Show drivers')" class="cursor-pointer rounded border bg-white px-2 py-1 text-[10px]">
+          Drivers
+        </button>
 
-                <div id="view-drivers" class="tab-view hidden space-y-4">
-                    <div class="flex justify-between items-center">
-                        <input type="text" id="searchDriverInput" oninput="filterTable('searchDriverInput', 'driverTableBody')" placeholder="Search operators..." class="px-4 py-2 border border-gray-300 rounded-lg w-72 text-xs">
-                    </div>
-                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                        <table class="w-full text-left border-collapse">
-                            <thead class="bg-gray-50 text-xs font-semibold uppercase text-gray-500 border-b border-gray-200">
-                                <tr>
-                                    <th class="px-6 py-3.5">Driver Name</th>
-                                    <th class="px-6 py-3.5">License ID</th>
-                                    <th class="px-6 py-3.5">Contact No</th>
-                                    <th class="px-6 py-3.5 text-center">Safety Score</th>
-                                    <th class="px-6 py-3.5 text-center">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="driverTableBody" class="divide-y divide-gray-100"></tbody>
-                        </table>
-                    </div>
-                </div>
+        <button onclick="injectChatMessage('Show vehicles')" class="cursor-pointer rounded border bg-white px-2 py-1 text-[10px]">
+          Vehicles
+        </button>
+      </div>
 
-                <div id="view-trips" class="tab-view hidden space-y-4">
-                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                        <table class="w-full text-left border-collapse">
-                            <thead class="bg-gray-50 text-xs font-semibold uppercase text-gray-500 border-b border-gray-200">
-                                <tr>
-                                    <th class="px-6 py-3.5">Route Info</th>
-                                    <th class="px-6 py-3.5">Vehicle</th>
-                                    <th class="px-6 py-3.5">Assigned Captain</th>
-                                    <th class="px-6 py-3.5">Cargo Weight</th>
-                                    <th class="px-6 py-3.5 text-center">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tripTableBody" class="divide-y divide-gray-100"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div id="view-comms" class="tab-view hidden space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm md:col-span-1 space-y-4">
-                            <h3 class="text-base font-bold text-gray-800">Dispatch Push Message</h3>
-                            <form onsubmit="sendDriverAlert(event)" class="space-y-3">
-                                <div>
-                                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Target Operator</label>
-                                    <select id="commDriverSelect" required class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-xs"></select>
-                                </div>
-
-                                <!-- ===================== NEW: Quick Message Templates section ===================== -->
-                                <div id="quickTemplatesSection">
-                                    <span class="qmt-badge">⚡ One Click Templates</span>
-                                    <p class="qmt-hint">Click any template to instantly generate a professional dispatch message.</p>
-                                    <div class="qmt-grid" id="qmtGrid">
-                                        <!-- Buttons are injected by JS from the templates array, keeps markup DRY -->
-                                    </div>
-                                </div>
-                                <!-- =================== END NEW: Quick Message Templates section =================== -->
-
-                                <div>
-                                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Message Broadcast</label>
-                                    <textarea id="commMessage" required placeholder="Type emergency route change or alert..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs h-24"></textarea>
-                                </div>
-                                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-lg text-xs transition">Transmit Server Alert</button>
-                            </form>
-                        </div>
-
-                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm md:col-span-2">
-                            <h3 class="text-base font-bold text-gray-800 mb-4">Live Database Alert Transmission Logs</h3>
-                            <div class="border border-gray-100 rounded-xl p-4 bg-slate-950 text-emerald-400 font-mono text-xs h-64 overflow-y-auto space-y-2" id="alertLiveLogs"></div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
+      <div id="chatBody" class="flex-1 space-y-3 overflow-y-auto bg-slate-50 p-3 font-mono text-xs">
+        <div class="rounded-xl border border-indigo-100 bg-indigo-50 p-3 text-indigo-950">
+          Hello Operations Manager! I can answer questions about vehicles, drivers,
+          trips, and fleet metrics.
         </div>
+      </div>
+
+      <form onsubmit="handleChatSubmit(event)" class="flex gap-2 border-t border-gray-200 bg-white p-3">
+        <input
+          id="chatInput"
+          required
+          placeholder="Ask logistics engine AI..."
+          class="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-xs"
+        />
+
+        <button class="cursor-pointer rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700">
+          Send
+        </button>
+      </form>
     </div>
 
-    <!-- ===================== NEW: Toast notification container ===================== -->
-    <div id="qmtToastContainer" aria-live="polite"></div>
-    <!-- =================== END NEW: Toast notification container =================== -->
+    <button
+      onclick="toggleChat()"
+      class="cursor-pointer rounded-full border border-slate-800 bg-slate-900 p-4 text-white shadow-2xl hover:bg-slate-800"
+    >
+      AI
+    </button>
+  </div>
 
-    <script>
-        const API_URL = "http://127.0.0.1:5000/api";
-        let sessionActive = sessionStorage.getItem('__secure_token') ? true : false;
-        let currentUserRole = sessionStorage.getItem('__secure_role') || null;
-        let isFailoverMockActive = false;
-
-        // HIGH VALUE RESILIENT FEEDS (Failover dummy database layer)
-        const mockDatabaseFeed = {
-            vehicles: [
-                { reg: "DL-3C-BA-4012", model: "Tata Prima 2825.K", type: "Heavy Tipper", region: "North-Delhi", odo: 48920, status: "Active Available" },
-                { reg: "MH-12-QW-8841", model: "Mahindra Blazo X", type: "Haulage Truck", region: "West-Mumbai", odo: 121050, status: "Active Available" },
-                { reg: "KA-03-MM-5009", model: "Ashok Leyland Ecomet", type: "Distribution Van", region: "South-Bangalore", odo: 31200, status: "Under Maintenance" }
-            ],
-            drivers: [
-                { name: "Rajesh Kumar", license: "DL-14201800492", contact: "+91 98765 43210", score: 94, status: "On Duty" },
-                { name: "Satnam Singh", license: "PB-02201599301", contact: "+91 87654 32109", score: 88, status: "Rest Block" },
-                { name: "Amit Sharma", license: "MH-01202100481", contact: "+91 76543 21098", score: 79, status: "On Duty" }
-            ],
-            trips: [
-                { source: "Noida Sector 62", dest: "Jaipur Industrial Zone", dist: 285, vehicle: "DL-3C-BA-4012", driver: "Rajesh Kumar", weight: 14500, stage: "In-Transit" },
-                { source: "Mumbai Port Trust", dest: "Pune Logistics Hub", dist: 150, vehicle: "MH-12-QW-8841", driver: "Amit Sharma", weight: 9200, stage: "Dispatched" }
-            ],
-            alerts: [
-                { timestamp: new Date().toLocaleTimeString(), driver_lic: "DL-14201800492", message: "Speed corridor warning near Expressway Toll.", status: "Delivered" }
-            ]
-        };
-
-        function handleAuth(e) {
-            e.preventDefault();
-            const user = document.getElementById('authUsername').value.trim().toLowerCase();
-            const pass = document.getElementById('authPassword').value.trim();
-
-            let role = null;
-            if (user === 'admin' && pass === 'admin123') role = "Fleet Manager";
-            else if (user === 'driver' && pass === 'driver123') role = "Driver";
-            else if (user === 'safety' && pass === 'safety123') role = "Safety Officer";
-
-            if (role) {
-                sessionActive = true;
-                currentUserRole = role;
-                sessionStorage.setItem('__secure_role', role);
-                sessionStorage.setItem('__secure_token', 'SECURE_API_JWT_TOK_' + Date.now());
-                
-                document.getElementById('loginOverlay').classList.add('hidden');
-                document.getElementById('roleBadge').innerText = `${role} Mode`;
-                document.getElementById('avatarBadge').innerText = role.split(' ').map(n=>n[0]).join('');
-                
-                configureRoleBasedActions(role);
-                syncWithBackendServer();
-            } else {
-                alert("🔒 Authentication Fail: Invalid credentials.");
-            }
+  <script>
+    const mockDatabaseFeed = {
+      vehicles: [
+        {
+          reg: "DL-3C-BA-4012",
+          model: "Tata Prima 2825.K",
+          region: "North-Delhi",
+          odo: 48920,
+          status: "Active Available"
+        },
+        {
+          reg: "MH-12-QW-8841",
+          model: "Mahindra Blazo X",
+          region: "West-Mumbai",
+          odo: 121050,
+          status: "Active Available"
+        },
+        {
+          reg: "KA-03-MM-5009",
+          model: "Ashok Leyland Ecomet",
+          region: "South-Bangalore",
+          odo: 31200,
+          status: "Under Maintenance"
         }
+      ],
 
-        // FEATURE 1: Dynamic Context-Aware Privilege Panel
-        function configureRoleBasedActions(role) {
-            const panel = document.getElementById('roleActionPanel');
-            const title = document.getElementById('roleActionTitle');
-            const container = document.getElementById('roleActionButtons');
-            
-            if(!panel || !container) return;
-            container.innerHTML = '';
-            panel.classList.remove('hidden');
-
-            if (role === "Fleet Manager") {
-                title.innerText = "Fleet Commander Workspace";
-                container.innerHTML = `
-                    <button onclick="alert('Triggered: Auto-route optimization calculation')" class="bg-indigo-600 hover:bg-indigo-500 px-3 py-1.5 rounded-lg text-xs font-bold transition">Optimize Routes</button>
-                    <button onclick="alert('Triggered: Emergency Fleet Lockdown sequential system lock')" class="bg-red-600 hover:bg-red-500 px-3 py-1.5 rounded-lg text-xs font-bold transition">Emergency Lockdown</button>
-                `;
-            } else if (role === "Driver") {
-                title.innerText = "Operator Duty Terminal";
-                container.innerHTML = `
-                    <button onclick="alert('Logged: Shift check-in verified.')" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded-lg text-xs font-bold transition">Duty Check-In</button>
-                    <button onclick="alert('SOS Alert Transmitted to emergency operators.')" class="bg-red-600 hover:bg-red-500 px-3 py-1.5 rounded-lg text-xs font-bold transition">🚨 Send SOS</button>
-                `;
-            } else if (role === "Safety Officer") {
-                title.innerText = "Safety & Compliance Audit Control";
-                container.innerHTML = `
-                    <button onclick="alert('Generated: System-wide active risk factor audit report.')" class="bg-amber-600 hover:bg-amber-500 px-3 py-1.5 rounded-lg text-xs font-bold transition">Run Safety Audit</button>
-                `;
-            }
+      drivers: [
+        {
+          name: "Rajesh Kumar",
+          license: "DL-14201800492",
+          contact: "+91 98765 43210",
+          score: 94,
+          status: "On Duty"
+        },
+        {
+          name: "Satnam Singh",
+          license: "PB-02201599301",
+          contact: "+91 87654 32109",
+          score: 88,
+          status: "Rest Block"
+        },
+        {
+          name: "Amit Sharma",
+          license: "MH-01202100481",
+          contact: "+91 76543 21098",
+          score: 79,
+          status: "On Duty"
         }
+      ],
 
-        function triggerLogout() {
-            sessionStorage.clear();
-            sessionActive = false;
-            document.getElementById('loginOverlay').classList.remove('hidden');
-            document.getElementById('roleActionPanel').classList.add('hidden');
+      trips: [
+        {
+          source: "Noida Sector 62",
+          dest: "Jaipur Industrial Zone",
+          dist: 285,
+          vehicle: "DL-3C-BA-4012",
+          driver: "Rajesh Kumar",
+          weight: 14500,
+          stage: "Ready",
+          start: [28.628, 77.364],
+          end: [26.9124, 75.7873],
+          color: "#4f46e5"
+        },
+        {
+          source: "Mumbai Port Trust",
+          dest: "Pune Logistics Hub",
+          dist: 150,
+          vehicle: "MH-12-QW-8841",
+          driver: "Amit Sharma",
+          weight: 9200,
+          stage: "Ready",
+          start: [18.94, 72.835],
+          end: [18.5204, 73.8567],
+          color: "#059669"
         }
+      ],
 
-        function switchTab(tabId) {
-            if(!sessionActive) return;
-            document.querySelectorAll('.tab-view').forEach(el => el.classList.add('hidden'));
-            document.getElementById(`view-${tabId}`).classList.remove('hidden');
-            
-            document.querySelectorAll('#sidebarMenu button').forEach(el => el.classList.remove('bg-indigo-600', 'font-semibold', 'text-white'));
-            document.getElementById(`btn-${tabId}`).classList.add('bg-indigo-600', 'font-semibold', 'text-white');
-            
-            document.getElementById('currentTabTitle').innerText = tabId.charAt(0).toUpperCase() + tabId.slice(1) + " Module";
-            syncWithBackendServer();
+      alerts: [
+        {
+          timestamp: new Date().toLocaleTimeString(),
+          driver_lic: "DL-14201800492",
+          message: "Speed corridor warning near Expressway Toll Road.",
+          status: "Delivered"
         }
+      ]
+    };
 
-        // FEATURE 2: Backend Automation Failover Logic
-        async function syncWithBackendServer() {
-            if(!sessionActive) return;
-            try {
-                const response = await fetch(`${API_URL}/dashboard`);
-                if(!response.ok) throw new Error("Fallback requested");
-                const data = await response.json();
-                
-                isFailoverMockActive = false;
-                document.getElementById('networkBadge').className = "text-xs font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800";
-                document.getElementById('networkBadge').innerText = "LIVE BACKEND";
+    let map;
+    const tripTrackers = {};
 
-                renderDashboardKPIs(data);
-                renderVehiclesTable(data.vehicles);
-                renderDriversTable(data.drivers);
-                renderTripsTable(data.trips);
-                renderCommsPanel(data.drivers, data.alerts);
-            } catch (err) {
-                // Activate automation fallback system seamlessly
-                isFailoverMockActive = true;
-                document.getElementById('networkBadge').className = "text-xs font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800";
-                document.getElementById('networkBadge').innerText = "DEMO SIMULATION";
-                
-                renderDashboardKPIs(mockDatabaseFeed);
-                renderVehiclesTable(mockDatabaseFeed.vehicles);
-                renderDriversTable(mockDatabaseFeed.drivers);
-                renderTripsTable(mockDatabaseFeed.trips);
-                renderCommsPanel(mockDatabaseFeed.drivers, mockDatabaseFeed.alerts);
-            }
+    function launchDashboard() {
+      const cover = document.getElementById("coverPage");
+      cover.style.opacity = "0";
+
+      setTimeout(() => {
+        cover.classList.add("hidden");
+      }, 350);
+    }
+
+    function triggerLogout() {
+      const cover = document.getElementById("coverPage");
+      cover.classList.remove("hidden");
+      cover.style.opacity = "1";
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll(".tab-view").forEach((view) => {
+        view.classList.add("hidden");
+      });
+
+      document.getElementById(`view-${tabId}`).classList.remove("hidden");
+
+      document.querySelectorAll("#sidebarMenu button").forEach((button) => {
+        button.classList.remove("bg-indigo-600", "font-semibold", "text-white");
+      });
+
+      document.getElementById(`btn-${tabId}`).classList.add(
+        "bg-indigo-600",
+        "font-semibold",
+        "text-white"
+      );
+
+      document.getElementById("currentTabTitle").textContent =
+        `${tabId.charAt(0).toUpperCase() + tabId.slice(1)} Module`;
+
+      if (tabId === "trips") {
+        initializeMap();
+
+        setTimeout(() => {
+          map.invalidateSize();
+        }, 100);
+      }
+    }
+
+    function renderAllComponents() {
+      document.getElementById("kpi-vehicles").textContent =
+        mockDatabaseFeed.vehicles.length;
+
+      document.getElementById("kpi-drivers").textContent =
+        mockDatabaseFeed.drivers.length;
+
+      document.getElementById("kpi-trips").textContent =
+        mockDatabaseFeed.trips.length;
+
+      const averageScore = Math.round(
+        mockDatabaseFeed.drivers.reduce((total, driver) => total + driver.score, 0) /
+        mockDatabaseFeed.drivers.length
+      );
+
+      document.getElementById("kpi-safety").textContent = `${averageScore}%`;
+
+      document.getElementById("vehicleTableBody").innerHTML =
+        mockDatabaseFeed.vehicles.map((vehicle) => `
+          <tr class="text-xs hover:bg-gray-50">
+            <td class="px-6 py-4 font-semibold">${vehicle.reg}</td>
+            <td class="px-6 py-4">${vehicle.model}</td>
+            <td class="px-6 py-4">${vehicle.region}</td>
+            <td class="px-6 py-4">${vehicle.odo.toLocaleString()} km</td>
+            <td class="px-6 py-4 text-center">
+              <span class="rounded bg-emerald-100 px-2 py-0.5 text-emerald-800">
+                ${vehicle.status}
+              </span>
+            </td>
+          </tr>
+        `).join("");
+
+      document.getElementById("driverTableBody").innerHTML =
+        mockDatabaseFeed.drivers.map((driver) => `
+          <tr class="text-xs hover:bg-gray-50">
+            <td class="px-6 py-4 font-semibold">${driver.name}</td>
+            <td class="px-6 py-4 font-mono">${driver.license}</td>
+            <td class="px-6 py-4">${driver.contact}</td>
+            <td class="px-6 py-4 text-center font-bold text-indigo-600">
+              ${driver.score}/100
+            </td>
+            <td class="px-6 py-4 text-center">${driver.status}</td>
+          </tr>
+        `).join("");
+
+      renderTripTable();
+
+      document.getElementById("commDriverSelect").innerHTML =
+        mockDatabaseFeed.drivers.map((driver) => `
+          <option value="${driver.license}">${driver.name}</option>
+        `).join("");
+
+      document.getElementById("alertLiveLogs").innerHTML =
+        mockDatabaseFeed.alerts.map((alert) => `
+          <div class="border-b border-slate-900 pb-1">
+            [${alert.timestamp}] Lic: [${alert.driver_lic}] →
+            <span class="text-white">${alert.message}</span>
+            <span class="font-bold text-indigo-400">(${alert.status})</span>
+          </div>
+        `).join("");
+    }
+
+    function renderTripTable() {
+      document.getElementById("tripTableBody").innerHTML =
+        mockDatabaseFeed.trips.map((trip, index) => {
+          const tracker = tripTrackers[index];
+          const isTracking = tracker && tracker.timer;
+
+          return `
+            <tr class="text-xs hover:bg-gray-50">
+              <td class="px-6 py-4 font-medium">
+                ${trip.source} → ${trip.dest} (${trip.dist} km)
+              </td>
+
+              <td class="px-6 py-4 font-mono">${trip.vehicle}</td>
+              <td class="px-6 py-4">${trip.driver}</td>
+              <td class="px-6 py-4">${trip.weight.toLocaleString()} kg</td>
+
+              <td class="px-6 py-4 text-center">
+                <span class="rounded bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-600">
+                  ${isTracking ? "Tracking" : trip.stage}
+                </span>
+              </td>
+
+              <td class="px-6 py-4 text-center">
+                <button
+                  onclick="${isTracking ? "stopRide" : "startRide"}(${index})"
+                  class="cursor-pointer rounded-lg px-3 py-1.5 text-[11px] font-bold text-white ${
+                    isTracking
+                      ? "bg-red-600 hover:bg-red-700"
+                      : "bg-emerald-600 hover:bg-emerald-700"
+                  }"
+                >
+                  ${isTracking ? "Stop Ride" : "Start Ride"}
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join("");
+    }
+
+    function initializeMap() {
+      if (map) return;
+
+      map = L.map("tripMap").setView([23.5, 78.5], 5);
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "© OpenStreetMap contributors"
+      }).addTo(map);
+
+      mockDatabaseFeed.trips.forEach((trip, index) => {
+        createTripTracker(index, trip);
+      });
+    }
+
+    function createTripTracker(index, trip) {
+      if (tripTrackers[index]) return;
+
+      const marker = L.circleMarker(trip.start, {
+        radius: 10,
+        color: "#ffffff",
+        weight: 2,
+        fillColor: trip.color,
+        fillOpacity: 1
+      })
+        .addTo(map)
+        .bindPopup(`
+          <strong>${trip.driver}</strong><br>
+          ${trip.vehicle}<br>
+          <span>GPS ready</span>
+        `);
+
+      const routeLine = L.polyline([trip.start], {
+        color: trip.color,
+        weight: 5,
+        opacity: 0.85
+      }).addTo(map);
+
+      tripTrackers[index] = {
+        marker: marker,
+        line: routeLine,
+        route: [trip.start],
+        progress: 0,
+        timer: null
+      };
+    }
+
+    function startRide(index) {
+      initializeMap();
+
+      const trip = mockDatabaseFeed.trips[index];
+      const tracker = tripTrackers[index];
+
+      if (tracker.timer) return;
+
+      trip.stage = "In-Transit";
+
+      tracker.marker
+        .setPopupContent(`
+          <strong>${trip.driver}</strong><br>
+          ${trip.vehicle}<br>
+          <span style="color:#059669">GPS tracking active</span>
+        `)
+        .openPopup();
+
+      map.setView(tracker.marker.getLatLng(), 9, {
+        animate: true
+      });
+
+      tracker.timer = setInterval(() => {
+        tracker.progress = Math.min(tracker.progress + 0.025, 1);
+
+        const latitude =
+          trip.start[0] + (trip.end[0] - trip.start[0]) * tracker.progress;
+
+        const longitude =
+          trip.start[1] + (trip.end[1] - trip.start[1]) * tracker.progress;
+
+        const newPosition = [latitude, longitude];
+
+        tracker.route.push(newPosition);
+        tracker.marker.setLatLng(newPosition);
+        tracker.line.setLatLngs(tracker.route);
+
+        map.panTo(newPosition, {
+          animate: true,
+          duration: 0.45
+        });
+
+        if (tracker.progress >= 1) {
+          stopRide(index);
         }
+      }, 650);
 
-        function renderDashboardKPIs(data) {
-            document.getElementById('kpi-vehicles').innerText = data.vehicles.length;
-            document.getElementById('kpi-drivers').innerText = data.drivers.length;
-            document.getElementById('kpi-trips').innerText = data.trips.length;
-            
-            // Calculate real-time runtime safety average
-            if(data.drivers.length > 0) {
-                let totalScore = data.drivers.reduce((acc, current) => acc + parseInt(current.score || 0), 0);
-                document.getElementById('kpi-safety').innerText = Math.round(totalScore / data.drivers.length) + "%";
-            }
-        }
+      renderTripTable();
+    }
 
-        function renderVehiclesTable(list) {
-            const tbody = document.getElementById('vehicleTableBody');
-            tbody.innerHTML = '';
-            list.forEach(v => {
-                tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50 transition text-xs">
-                        <td class="px-6 py-4 font-semibold text-gray-900">${v.reg}</td>
-                        <td class="px-6 py-4">${v.model} ${v.type ? `(${v.type})` : ''}</td>
-                        <td class="px-6 py-4 text-xs font-bold text-slate-500">${v.region}</td>
-                        <td class="px-6 py-4">${v.odo.toLocaleString()} km</td>
-                        <td class="px-6 py-4 text-center"><span class="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800">${v.status}</span></td>
-                    </tr>`;
-            });
-        }
+    function stopRide(index) {
+      const tracker = tripTrackers[index];
 
-        function renderDriversTable(list) {
-            const tbody = document.getElementById('driverTableBody');
-            tbody.innerHTML = '';
-            list.forEach(d => {
-                tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50 transition text-xs">
-                        <td class="px-6 py-4 font-semibold text-gray-900">${d.name}</td>
-                        <td class="px-6 py-4 font-mono text-xs">${d.license}</td>
-                        <td class="px-6 py-4">${d.contact}</td>
-                        <td class="px-6 py-4 text-center font-bold text-indigo-600">${d.score}/100</td>
-                        <td class="px-6 py-4 text-center"><span class="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-800">${d.status}</span></td>
-                    </tr>`;
-            });
-        }
+      if (!tracker || !tracker.timer) return;
 
-        function renderTripsTable(list) {
-            const tbody = document.getElementById('tripTableBody');
-            tbody.innerHTML = '';
-            list.forEach(t => {
-                tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50 transition text-xs">
-                        <td class="px-6 py-4 font-medium">${t.source} &rarr; ${t.dest} (${t.dist} km)</td>
-                        <td class="px-6 py-4 font-mono text-xs">${t.vehicle}</td>
-                        <td class="px-6 py-4">${t.driver}</td>
-                        <td class="px-6 py-4">${t.weight.toLocaleString()} kg</td>
-                        <td class="px-6 py-4 text-center"><span class="text-[10px] font-bold uppercase text-indigo-600 bg-indigo-50 px-2 py-1 rounded">${t.stage}</span></td>
-                    </tr>`;
-            });
-        }
+      clearInterval(tracker.timer);
+      tracker.timer = null;
 
-        function renderCommsPanel(drivers, alerts) {
-            const select = document.getElementById('commDriverSelect');
-            if(select) {
-                select.innerHTML = '';
-                drivers.forEach(d => { select.innerHTML += `<option value="${d.license}">${d.name} (${d.contact})</option>`; });
-            }
-            
-            const logs = document.getElementById('alertLiveLogs');
-            if(logs) {
-                logs.innerHTML = '';
-                alerts.forEach(a => {
-                    logs.innerHTML += `<div class="border-b border-slate-900 pb-1">[${a.timestamp}] Target License [${a.driver_lic}] &rarr; <span class="text-white">${a.message}</span> <span class="text-[10px] text-indigo-400 font-bold ml-1">(${a.status})</span></div>`;
-                });
-            }
-        }
+      const trip = mockDatabaseFeed.trips[index];
 
-        async function sendDriverAlert(e) {
-            e.preventDefault();
-            const lic = document.getElementById('commDriverSelect').value;
-            const msg = document.getElementById('commMessage').value.trim();
+      trip.stage = tracker.progress >= 1 ? "Arrived" : "Paused";
 
-            if(isFailoverMockActive) {
-                // Mock execution intercept
-                mockDatabaseFeed.alerts.unshift({ timestamp: new Date().toLocaleTimeString(), driver_lic: lic, message: msg, status: "Transmitted (Mock)" });
-                document.getElementById('commMessage').value = '';
-                syncWithBackendServer();
-                alert("Simulated Dispatch Alert appended to demo cache.");
-                return;
-            }
+      tracker.marker.setPopupContent(`
+        <strong>${trip.driver}</strong><br>
+        ${trip.vehicle}<br>
+        <span style="color:#dc2626">Tracking stopped</span>
+      `);
 
-            try {
-                const res = await fetch(`${API_URL}/driver/contact`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ driver_lic: lic, message: msg })
-                });
-                const result = await res.json();
-                alert(result.message);
-                document.getElementById('commMessage').value = '';
-                syncWithBackendServer();
-            } catch (err) {
-                alert("Database transmission offline. Backend sync lost.");
-            }
-        }
+      renderTripTable();
+    }
 
-        function filterTable(inputId, tableId) {
-            let filter = document.getElementById(inputId).value.toLowerCase();
-            let rows = document.querySelectorAll(`#${tableId} tr`);
-            rows.forEach(row => row.style.display = row.innerText.toLowerCase().includes(filter) ? '' : 'none');
-        }
+    function fitAllTrips() {
+      initializeMap();
 
-        window.onload = function() {
-            if (sessionActive && currentUserRole) {
-                document.getElementById('loginOverlay').classList.add('hidden');
-                document.getElementById('roleBadge').innerText = `${currentUserRole} Mode`;
-                document.getElementById('avatarBadge').innerText = currentUserRole.split(' ').map(n=>n[0]).join('');
-                configureRoleBasedActions(currentUserRole);
-                syncWithBackendServer();
-            } else {
-                triggerLogout();
-            }
+      const markers = Object.values(tripTrackers).map((tracker) => tracker.marker);
 
-            // NEW: build the quick template buttons once the page has loaded
-            renderQuickTemplates();
-        }
+      if (markers.length > 0) {
+        map.fitBounds(L.featureGroup(markers).getBounds().pad(0.25));
+      }
+    }
 
-        /* ===================== NEW: Quick Message Templates logic ===================== */
+    function filterTable(inputId, tableId) {
+      const query = document.getElementById(inputId).value.toLowerCase();
 
-        // Template data source: icon, label and the message that gets typed into the textarea
-        const quickMessageTemplates = [
-            { icon: "🚧", label: "Road Block", message: "Road blocked ahead. Please follow the alternate route immediately." },
-            { icon: "🌧", label: "Heavy Rain", message: "Heavy rainfall reported ahead. Reduce speed and drive carefully." },
-            { icon: "🚑", label: "Accident", message: "Accident reported on the assigned route. Maintain safe distance and expect delays." },
-            { icon: "🚓", label: "Traffic Diversion", message: "Traffic diversion is active. Follow updated navigation instructions." },
-            { icon: "⛽", label: "Fuel Stop", message: "Nearest fuel station assigned. Please refuel before continuing the trip." },
-            { icon: "⚠", label: "Vehicle Breakdown", message: "Vehicle breakdown reported. Pull over safely and wait for assistance." },
-            { icon: "🚨", label: "Emergency Evacuation", message: "Emergency evacuation initiated. Follow emergency response protocol immediately." },
-            { icon: "🛣", label: "Route Change", message: "Your assigned route has changed. Please check the updated navigation." }
-        ];
+      document.querySelectorAll(`#${tableId} tr`).forEach((row) => {
+        row.style.display = row.innerText.toLowerCase().includes(query)
+          ? ""
+          : "none";
+      });
+    }
 
-        let qmtTypingTimer = null; // tracks the active typing animation so a new click can interrupt it cleanly
+    function sendDriverAlert(event) {
+      event.preventDefault();
 
-        // Builds the template button grid from the data array above
-        function renderQuickTemplates() {
-            const grid = document.getElementById('qmtGrid');
-            if (!grid) return;
+      const license = document.getElementById("commDriverSelect").value;
+      const message = document.getElementById("commMessage").value.trim();
 
-            grid.innerHTML = '';
-            quickMessageTemplates.forEach((tpl, index) => {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'qmt-btn';
-                btn.setAttribute('data-index', index);
-                btn.innerHTML = `<span class="qmt-icon">${tpl.icon}</span><span>${tpl.label}</span>`;
-                btn.addEventListener('click', function (ev) {
-                    createQmtRipple(btn, ev);
-                    selectQuickTemplate(index, btn);
-                });
-                grid.appendChild(btn);
-            });
-        }
+      if (!message) return;
 
-        // Handles selection: highlight state + typing animation + toast
-        function selectQuickTemplate(index, btnEl) {
-            const tpl = quickMessageTemplates[index];
-            const textarea = document.getElementById('commMessage');
-            if (!tpl || !textarea) return;
+      mockDatabaseFeed.alerts.unshift({
+        timestamp: new Date().toLocaleTimeString(),
+        driver_lic: license,
+        message: message,
+        status: "Transmitted"
+      });
 
-            // Remove highlight from any previously selected template button
-            document.querySelectorAll('.qmt-btn').forEach(b => b.classList.remove('qmt-selected'));
-            btnEl.classList.add('qmt-selected');
+      document.getElementById("commMessage").value = "";
+      renderAllComponents();
+    }
 
-            typeMessageIntoTextarea(textarea, tpl.message);
-            showQmtToast('✅ Template Applied Successfully');
-        }
+    function toggleChat() {
+      const chatWindow = document.getElementById("chatWindow");
 
-        // Smooth character-by-character typing animation instead of instant insertion
-        function typeMessageIntoTextarea(textarea, fullText) {
-            if (qmtTypingTimer) {
-                clearInterval(qmtTypingTimer);
-                qmtTypingTimer = null;
-            }
+      chatWindow.classList.toggle("pointer-events-none");
+      chatWindow.classList.toggle("translate-y-4");
+      chatWindow.classList.toggle("opacity-0");
+    }
 
-            textarea.value = '';
-            textarea.classList.add('qmt-textarea-glow');
-            textarea.focus();
+    function injectChatMessage(message) {
+      document.getElementById("chatInput").value = message;
+      handleChatSubmit(new Event("submit"));
+    }
 
-            let charIndex = 0;
-            qmtTypingTimer = setInterval(() => {
-                charIndex++;
-                textarea.value = fullText.slice(0, charIndex);
-                // keep cursor pinned to the end while typing
-                textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+    function handleChatSubmit(event) {
+      event.preventDefault();
 
-                if (charIndex >= fullText.length) {
-                    clearInterval(qmtTypingTimer);
-                    qmtTypingTimer = null;
-                    // Let the purple glow linger briefly after typing finishes, then fade out
-                    setTimeout(() => textarea.classList.remove('qmt-textarea-glow'), 500);
-                }
-            }, 18);
-        }
+      const input = document.getElementById("chatInput");
+      const chatBody = document.getElementById("chatBody");
+      const question = input.value.trim();
 
-        // Small ripple effect that starts from the click point inside the button
-        function createQmtRipple(btnEl, ev) {
-            const existingRipple = btnEl.querySelector('.qmt-ripple');
-            if (existingRipple) existingRipple.remove();
+      if (!question) return;
 
-            const rect = btnEl.getBoundingClientRect();
-            const size = Math.max(rect.width, rect.height);
-            const ripple = document.createElement('span');
-            ripple.className = 'qmt-ripple';
-            ripple.style.width = ripple.style.height = `${size}px`;
-            ripple.style.left = `${(ev.clientX ?? rect.left + rect.width / 2) - rect.left - size / 2}px`;
-            ripple.style.top = `${(ev.clientY ?? rect.top + rect.height / 2) - rect.top - size / 2}px`;
+      chatBody.innerHTML += `
+        <div class="ml-auto max-w-[85%] rounded-xl bg-indigo-600 p-2.5 text-left text-white">
+          ${question}
+        </div>
+      `;
 
-            btnEl.appendChild(ripple);
-            ripple.addEventListener('animationend', () => ripple.remove());
-        }
+      input.value = "";
 
-        // Toast notification, slides in from top-right and auto-dismisses
-        function showQmtToast(text) {
-            const container = document.getElementById('qmtToastContainer');
-            if (!container) return;
+      const text = question.toLowerCase();
+      let reply = "I can help with fleet status, drivers, vehicles, and trips.";
 
-            const toast = document.createElement('div');
-            toast.className = 'qmt-toast';
-            toast.textContent = text;
-            container.appendChild(toast);
+      if (text.includes("trip") || text.includes("route")) {
+        reply = `<b>Active Trips:</b><br>${
+          mockDatabaseFeed.trips.map((trip) =>
+            `• ${trip.source} → ${trip.dest}: <b>${trip.stage}</b>`
+          ).join("<br>")
+        }`;
+      } else if (text.includes("driver")) {
+        reply = `<b>Driver Status:</b><br>${
+          mockDatabaseFeed.drivers.map((driver) =>
+            `• ${driver.name}: ${driver.score}/100 (${driver.status})`
+          ).join("<br>")
+        }`;
+      } else if (text.includes("vehicle")) {
+        reply = `<b>Vehicle Registry:</b><br>${
+          mockDatabaseFeed.vehicles.map((vehicle) =>
+            `• ${vehicle.reg}: ${vehicle.status}`
+          ).join("<br>")
+        }`;
+      } else if (text.includes("stat") || text.includes("summary") || text.includes("dashboard")) {
+        reply = `
+          <b>Fleet Summary:</b><br>
+          • Vehicles: <b>${mockDatabaseFeed.vehicles.length}</b><br>
+          • Drivers: <b>${mockDatabaseFeed.drivers.length}</b><br>
+          • Trips: <b>${mockDatabaseFeed.trips.length}</b><br>
+          • Average Safety: <b>${
+            Math.round(
+              mockDatabaseFeed.drivers.reduce((total, driver) => total + driver.score, 0) /
+              mockDatabaseFeed.drivers.length
+            )
+          }%</b>
+        `;
+      }
 
-            // Matches the CSS animation total duration (in + hold + out)
-            setTimeout(() => toast.remove(), 2500);
-        }
-        /* =================== END NEW: Quick Message Templates logic =================== */
-    </script>
+      setTimeout(() => {
+        chatBody.innerHTML += `
+          <div class="rounded-xl border border-indigo-100 bg-indigo-50 p-3 text-left text-indigo-950">
+            ${reply}
+          </div>
+        `;
+
+        chatBody.scrollTop = chatBody.scrollHeight;
+      }, 300);
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      renderAllComponents();
+    });
+  </script>
 </body>
 </html>
