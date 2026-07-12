@@ -5,6 +5,180 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TransitOps - Enterprise Fleet Operations</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <!-- ===================== NEW: Quick Message Templates styles ===================== -->
+    <style>
+        /* Badge above template grid */
+        .qmt-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+            color: #4338ca;
+            border: 1px solid #c7d2fe;
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            padding: 4px 10px;
+            border-radius: 999px;
+            margin-bottom: 6px;
+        }
+
+        .qmt-hint {
+            font-size: 11px;
+            color: #8b90a6;
+            margin-bottom: 10px;
+        }
+
+        /* Template button grid */
+        .qmt-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+            margin-bottom: 18px;
+        }
+
+        @media (min-width: 480px) {
+            .qmt-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        /* Individual template button */
+        .qmt-btn {
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            width: 100%;
+            text-align: left;
+            padding: 9px 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(99, 102, 241, 0.18);
+            background: linear-gradient(135deg, rgba(238, 242, 255, 0.9), rgba(224, 231, 255, 0.6));
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            color: #3730a3;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 1px 4px rgba(99, 102, 241, 0.08);
+            transition: transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1),
+                        box-shadow 220ms ease,
+                        background 220ms ease,
+                        border-color 220ms ease,
+                        color 220ms ease;
+        }
+
+        .qmt-btn .qmt-icon {
+            font-size: 15px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .qmt-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.28);
+            border-color: rgba(99, 102, 241, 0.4);
+        }
+
+        .qmt-btn:active {
+            transform: translateY(-1px) scale(0.97);
+        }
+
+        /* Selected / active state glow */
+        .qmt-btn.qmt-selected {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: #ffffff;
+            border-color: transparent;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25), 0 8px 22px rgba(99, 102, 241, 0.45);
+            animation: qmtSelectedPulse 1.8s ease-in-out infinite;
+        }
+
+        @keyframes qmtSelectedPulse {
+            0%, 100% { box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25), 0 8px 22px rgba(99, 102, 241, 0.45); }
+            50% { box-shadow: 0 0 0 5px rgba(99, 102, 241, 0.15), 0 10px 26px rgba(99, 102, 241, 0.55); }
+        }
+
+        /* Ripple click effect */
+        .qmt-btn .qmt-ripple {
+            position: absolute;
+            border-radius: 50%;
+            transform: scale(0);
+            background: rgba(255, 255, 255, 0.55);
+            pointer-events: none;
+            animation: qmtRippleAnim 550ms ease-out forwards;
+        }
+
+        @keyframes qmtRippleAnim {
+            to {
+                transform: scale(3.2);
+                opacity: 0;
+            }
+        }
+
+        /* Textarea glow when template is being typed in */
+        .qmt-textarea-glow {
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.25), 0 4px 14px rgba(99, 102, 241, 0.25) !important;
+            border-color: #6366f1 !important;
+            transition: box-shadow 300ms ease, border-color 300ms ease;
+        }
+
+        /* Blinking caret shown while the typing animation runs */
+        .qmt-typing-caret {
+            display: inline-block;
+            width: 2px;
+            background: #6366f1;
+            margin-left: 1px;
+            animation: qmtCaretBlink 0.85s steps(1) infinite;
+        }
+
+        @keyframes qmtCaretBlink {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0; }
+        }
+
+        /* Toast notification */
+        #qmtToastContainer {
+            position: fixed;
+            top: 18px;
+            right: 18px;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .qmt-toast {
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #111827, #1f2937);
+            color: #ffffff;
+            border: 1px solid rgba(99, 102, 241, 0.4);
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(99, 102, 241, 0.15);
+            transform: translateX(120%);
+            opacity: 0;
+            animation: qmtToastIn 380ms cubic-bezier(0.16, 1, 0.3, 1) forwards,
+                       qmtToastOut 380ms cubic-bezier(0.7, 0, 1, 1) forwards 2.1s;
+        }
+
+        @keyframes qmtToastIn {
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes qmtToastOut {
+            to { transform: translateX(120%); opacity: 0; }
+        }
+    </style>
+    <!-- =================== END NEW: Quick Message Templates styles =================== -->
 </head>
 <body class="bg-gray-50 font-sans text-sm text-gray-700 select-none">
 
@@ -164,6 +338,17 @@
                                     <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Target Operator</label>
                                     <select id="commDriverSelect" required class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-xs"></select>
                                 </div>
+
+                                <!-- ===================== NEW: Quick Message Templates section ===================== -->
+                                <div id="quickTemplatesSection">
+                                    <span class="qmt-badge">⚡ One Click Templates</span>
+                                    <p class="qmt-hint">Click any template to instantly generate a professional dispatch message.</p>
+                                    <div class="qmt-grid" id="qmtGrid">
+                                        <!-- Buttons are injected by JS from the templates array, keeps markup DRY -->
+                                    </div>
+                                </div>
+                                <!-- =================== END NEW: Quick Message Templates section =================== -->
+
                                 <div>
                                     <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Message Broadcast</label>
                                     <textarea id="commMessage" required placeholder="Type emergency route change or alert..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs h-24"></textarea>
@@ -182,6 +367,10 @@
             </div>
         </div>
     </div>
+
+    <!-- ===================== NEW: Toast notification container ===================== -->
+    <div id="qmtToastContainer" aria-live="polite"></div>
+    <!-- =================== END NEW: Toast notification container =================== -->
 
     <script>
         const API_URL = "http://127.0.0.1:5000/api";
@@ -435,7 +624,119 @@
             } else {
                 triggerLogout();
             }
+
+            // NEW: build the quick template buttons once the page has loaded
+            renderQuickTemplates();
         }
+
+        /* ===================== NEW: Quick Message Templates logic ===================== */
+
+        // Template data source: icon, label and the message that gets typed into the textarea
+        const quickMessageTemplates = [
+            { icon: "🚧", label: "Road Block", message: "Road blocked ahead. Please follow the alternate route immediately." },
+            { icon: "🌧", label: "Heavy Rain", message: "Heavy rainfall reported ahead. Reduce speed and drive carefully." },
+            { icon: "🚑", label: "Accident", message: "Accident reported on the assigned route. Maintain safe distance and expect delays." },
+            { icon: "🚓", label: "Traffic Diversion", message: "Traffic diversion is active. Follow updated navigation instructions." },
+            { icon: "⛽", label: "Fuel Stop", message: "Nearest fuel station assigned. Please refuel before continuing the trip." },
+            { icon: "⚠", label: "Vehicle Breakdown", message: "Vehicle breakdown reported. Pull over safely and wait for assistance." },
+            { icon: "🚨", label: "Emergency Evacuation", message: "Emergency evacuation initiated. Follow emergency response protocol immediately." },
+            { icon: "🛣", label: "Route Change", message: "Your assigned route has changed. Please check the updated navigation." }
+        ];
+
+        let qmtTypingTimer = null; // tracks the active typing animation so a new click can interrupt it cleanly
+
+        // Builds the template button grid from the data array above
+        function renderQuickTemplates() {
+            const grid = document.getElementById('qmtGrid');
+            if (!grid) return;
+
+            grid.innerHTML = '';
+            quickMessageTemplates.forEach((tpl, index) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'qmt-btn';
+                btn.setAttribute('data-index', index);
+                btn.innerHTML = `<span class="qmt-icon">${tpl.icon}</span><span>${tpl.label}</span>`;
+                btn.addEventListener('click', function (ev) {
+                    createQmtRipple(btn, ev);
+                    selectQuickTemplate(index, btn);
+                });
+                grid.appendChild(btn);
+            });
+        }
+
+        // Handles selection: highlight state + typing animation + toast
+        function selectQuickTemplate(index, btnEl) {
+            const tpl = quickMessageTemplates[index];
+            const textarea = document.getElementById('commMessage');
+            if (!tpl || !textarea) return;
+
+            // Remove highlight from any previously selected template button
+            document.querySelectorAll('.qmt-btn').forEach(b => b.classList.remove('qmt-selected'));
+            btnEl.classList.add('qmt-selected');
+
+            typeMessageIntoTextarea(textarea, tpl.message);
+            showQmtToast('✅ Template Applied Successfully');
+        }
+
+        // Smooth character-by-character typing animation instead of instant insertion
+        function typeMessageIntoTextarea(textarea, fullText) {
+            if (qmtTypingTimer) {
+                clearInterval(qmtTypingTimer);
+                qmtTypingTimer = null;
+            }
+
+            textarea.value = '';
+            textarea.classList.add('qmt-textarea-glow');
+            textarea.focus();
+
+            let charIndex = 0;
+            qmtTypingTimer = setInterval(() => {
+                charIndex++;
+                textarea.value = fullText.slice(0, charIndex);
+                // keep cursor pinned to the end while typing
+                textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+
+                if (charIndex >= fullText.length) {
+                    clearInterval(qmtTypingTimer);
+                    qmtTypingTimer = null;
+                    // Let the purple glow linger briefly after typing finishes, then fade out
+                    setTimeout(() => textarea.classList.remove('qmt-textarea-glow'), 500);
+                }
+            }, 18);
+        }
+
+        // Small ripple effect that starts from the click point inside the button
+        function createQmtRipple(btnEl, ev) {
+            const existingRipple = btnEl.querySelector('.qmt-ripple');
+            if (existingRipple) existingRipple.remove();
+
+            const rect = btnEl.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const ripple = document.createElement('span');
+            ripple.className = 'qmt-ripple';
+            ripple.style.width = ripple.style.height = `${size}px`;
+            ripple.style.left = `${(ev.clientX ?? rect.left + rect.width / 2) - rect.left - size / 2}px`;
+            ripple.style.top = `${(ev.clientY ?? rect.top + rect.height / 2) - rect.top - size / 2}px`;
+
+            btnEl.appendChild(ripple);
+            ripple.addEventListener('animationend', () => ripple.remove());
+        }
+
+        // Toast notification, slides in from top-right and auto-dismisses
+        function showQmtToast(text) {
+            const container = document.getElementById('qmtToastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = 'qmt-toast';
+            toast.textContent = text;
+            container.appendChild(toast);
+
+            // Matches the CSS animation total duration (in + hold + out)
+            setTimeout(() => toast.remove(), 2500);
+        }
+        /* =================== END NEW: Quick Message Templates logic =================== */
     </script>
 </body>
 </html>
