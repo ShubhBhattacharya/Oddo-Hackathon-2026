@@ -1,10 +1,7 @@
-import React from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
-import { useAuth } from '@/contexts/AuthContext'
-import { cn } from '@/lib/utils'
-import { auth } from '@/lib/firebase'
-import { signOut } from 'firebase/auth'
-import { Button } from '@/components/ui/button'
+import React from "react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { cn } from "@/lib/utils";
 import {
   TruckIcon,
   UsersIcon,
@@ -13,54 +10,99 @@ import {
   FuelIcon,
   DollarSignIcon,
   BarChart3Icon,
-  LogOutIcon,
   HomeIcon,
-  BellIcon,
-} from 'lucide-react'
+  SettingsIcon,
+} from "lucide-react";
+
+interface SidebarProps {
+  onClose?: () => void;
+}
 
 const navItems = [
-  { title: 'Dashboard', icon: HomeIcon, to: '/dashboard', roles: ['FleetManager', 'Dispatcher', 'SafetyOfficer', 'FinancialAnalyst'] },
-  { title: 'Vehicles', icon: TruckIcon, to: '/dashboard/vehicles', roles: ['FleetManager'] },
-  { title: 'Drivers', icon: UsersIcon, to: '/dashboard/drivers', roles: ['FleetManager', 'SafetyOfficer', 'Dispatcher'] },
-  { title: 'Trips', icon: MapPinIcon, to: '/dashboard/trips', roles: ['Dispatcher', 'FleetManager'] },
-  { title: 'Maintenance', icon: WrenchIcon, to: '/dashboard/maintenance', roles: ['FleetManager'] },
-  { title: 'Fuel', icon: FuelIcon, to: '/dashboard/fuel', roles: ['FleetManager', 'FinancialAnalyst'] },
-  { title: 'Expenses', icon: DollarSignIcon, to: '/dashboard/expenses', roles: ['FleetManager', 'FinancialAnalyst'] },
-  { title: 'Reports', icon: BarChart3Icon, to: '/dashboard/reports', roles: ['FleetManager', 'FinancialAnalyst'] },
-]
+  {
+    title: "Dashboard",
+    icon: HomeIcon,
+    to: "/dashboard",
+    roles: ["FleetManager", "Dispatcher", "SafetyOfficer", "FinancialAnalyst"],
+  },
+  {
+    title: "Vehicles",
+    icon: TruckIcon,
+    to: "/dashboard/vehicles",
+    roles: ["FleetManager"],
+  },
+  {
+    title: "Drivers",
+    icon: UsersIcon,
+    to: "/dashboard/drivers",
+    roles: ["FleetManager", "SafetyOfficer", "Dispatcher"],
+  },
+  {
+    title: "Trips",
+    icon: MapPinIcon,
+    to: "/dashboard/trips",
+    roles: ["Dispatcher", "FleetManager"],
+  },
+  {
+    title: "Maintenance",
+    icon: WrenchIcon,
+    to: "/dashboard/maintenance",
+    roles: ["FleetManager"],
+  },
+  {
+    title: "Fuel & Expenses",
+    icon: DollarSignIcon,
+    to: "/dashboard/fuel",
+    roles: ["FleetManager", "FinancialAnalyst"],
+  },
+  {
+    title: "Analytics",
+    icon: BarChart3Icon,
+    to: "/dashboard/analytics",
+    roles: ["FleetManager", "FinancialAnalyst"],
+  },
+  {
+    title: "Settings",
+    icon: SettingsIcon,
+    to: "/dashboard/settings",
+    roles: ["FleetManager", "Dispatcher", "SafetyOfficer", "FinancialAnalyst"],
+  },
+];
 
-export default function Sidebar() {
-  const { user } = useAuth()
-  const navigate = useNavigate()
+export default function Sidebar({ onClose }: SidebarProps) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
-  const handleLogout = async () => {
-    await signOut(auth)
-    navigate('/login')
-  }
+  if (!user) return null;
 
-  if (!user) return null
-
-  const filteredNavItems = navItems.filter(item => item.roles.includes(user.role))
+  const filteredNavItems = navItems.filter((item) =>
+    item.roles.includes(user.role)
+  );
 
   return (
-    <aside className="w-64 bg-card border-r min-h-screen flex flex-col">
+    <div className="flex flex-col h-full">
       <div className="p-6 border-b">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary/10 rounded-lg">
+          <div className="p-2 bg-primary/10 rounded-xl">
             <TruckIcon className="h-6 w-6 text-primary" />
           </div>
-          <h1 className="text-xl font-bold">TransitOps</h1>
+          <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+            TransitOps
+          </h1>
         </div>
       </div>
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {filteredNavItems.map((item) => (
           <NavLink
             key={item.title}
             to={item.to}
+            onClick={onClose}
             className={({ isActive }) =>
               cn(
-                'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors',
-                isActive ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
+                isActive
+                  ? "bg-primary text-primary-foreground shadow-md"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )
             }
           >
@@ -69,16 +111,6 @@ export default function Sidebar() {
           </NavLink>
         ))}
       </nav>
-      <div className="p-4 border-t">
-        <div className="mb-4">
-          <p className="text-sm font-medium">{user.name || user.email}</p>
-          <p className="text-xs text-muted-foreground">{user.role}</p>
-        </div>
-        <Button variant="ghost" className="w-full justify-start gap-3" onClick={handleLogout}>
-          <LogOutIcon className="h-5 w-5" />
-          Logout
-        </Button>
-      </div>
-    </aside>
-  )
+    </div>
+  );
 }
